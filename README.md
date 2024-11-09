@@ -4,14 +4,14 @@ Simulating slime on the web with WebGPU.
 
 ## Introduction
 
-In a previous project, I made a [slime mold simulation in Unity](https://github.com/SuboptimalEng/slime-sim) to learn more about compute shaders. This time, I'm working on bringing the slime simulation to the web with WebGPU.
+In a previous project, I made a [slime mold simulation in Unity](https://github.com/SuboptimalEng/slime-sim-unity) to learn more about compute shaders. This time, I'm working on bringing the slime simulation to the web with WebGPU.
 
 ## Resources
 
 #### WebGPU
 
 - [WebGPU Fundamentals](https://webgpufundamentals.org/)
-- [Google's Game of Life WebGPU Tutorial Series](https://webgpufundamentals.org/)
+- [Google's Game of Life WebGPU Tutorial Series](https://codelabs.developers.google.com/your-first-webgpu-app#0)
 
 #### Slime Mold Simulation
 
