@@ -1,10 +1,6 @@
-# 🐌 Slime Sim WebGPU
+# 🐌 Slime Mold with WebGPU + TypeScript
 
-Simulating slime on the web with WebGPU.
-
-## Introduction
-
-In a previous project, I made a [slime mold simulation in Unity](https://github.com/SuboptimalEng/slime-sim-unity) to learn more about compute shaders. This time, I'm working on bringing the slime simulation to the web with WebGPU.
+In a previous project, I made a [slime mold simulation in Unity](https://github.com/SuboptimalEng/slime-mold-unity) to learn more about compute shaders. This time, I'm bringing the slime mold simulation to the web with WebGPU and TypeScript.
 
 ## Resources
 
