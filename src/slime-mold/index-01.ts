@@ -1,5 +1,7 @@
 import { Pane } from 'tweakpane';
 
+import slimeMoldShader from './slimeMoldShader-01.wgsl?raw';
+
 const testTweakPane = () => {
   const pane = new Pane();
   const PARAMS = { speed: 5, position: 0 };
@@ -84,17 +86,7 @@ const main = async () => {
 
   // Shaders: Vertex and Fragment
   const shaderModule = device.createShaderModule({
-    code: `
-        @vertex
-        fn main_vertex(@location(0) position: vec2<f32>) -> @builtin(position) vec4<f32> {
-            return vec4(position, 0.0, 1.0);
-        }
-
-        @fragment
-        fn main_fragment() -> @location(0) vec4<f32> {
-            return vec4(1.0, 0.0, 0.0, 1.0); // Red color
-        }
-        `,
+    code: slimeMoldShader,
   });
 
   // Create the render pipeline

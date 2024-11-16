@@ -1,12 +1,10 @@
 import { useEffect } from 'react';
-import { main } from './slime-mold/index';
+import { main } from './slime-mold/index-01';
 
 function App() {
   useEffect(() => {
     main();
   }, []);
-
-  // main();
 
   return (
     <div className="absolute w-full h-full bg-gray-900">
