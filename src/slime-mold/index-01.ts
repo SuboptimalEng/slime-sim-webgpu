@@ -1,5 +1,4 @@
 import { Pane } from 'tweakpane';
-
 import slimeMoldShader from './slimeMoldShader-01.wgsl?raw';
 
 const testTweakPane = () => {
