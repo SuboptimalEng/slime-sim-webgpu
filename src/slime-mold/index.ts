@@ -50,10 +50,22 @@ const main = async () => {
 
   // Vertex data for a simple triangle
   // prettier-ignore
+  // const vertexData = new Float32Array([
+  //     0.0,  0.5, // Top vertex
+  //     -0.5, -0.5, // Bottom-left vertex
+  //     0.5, -0.5,  // Bottom-right vertex
+  // ]);
+
+  // Vertex data for a simple square
+  // prettier-ignore
   const vertexData = new Float32Array([
-      0.0,  0.5, // Top vertex
-      -0.5, -0.5, // Bottom-left vertex
-      0.5, -0.5  // Bottom-right vertex
+      -0.5,  -0.5, // bottom-left
+      -0.5, 0.5, // top-left
+      0.5, -0.5, // bottom-right
+
+      0.5, -0.5, // bottom-right
+      -0.5, 0.5, // top-left
+      0.5, 0.5, // top-right
   ]);
 
   // Create a buffer for the vertex data
@@ -125,7 +137,8 @@ const main = async () => {
 
     renderPass.setPipeline(pipeline);
     renderPass.setVertexBuffer(0, vertexBuffer);
-    renderPass.draw(3); // Draw 3 vertices (triangle)
+    // renderPass.draw(3); // Draw 3 vertices (triangle)
+    renderPass.draw(6); // Draw 3 vertices (triangle)
     renderPass.end();
 
     device.queue.submit([commandEncoder.finish()]);
