@@ -50,15 +50,15 @@ const main = async () => {
 
   // Vertex data for a simple triangle
   // prettier-ignore
-  // const vertexData = new Float32Array([
-  //     0.0,  0.5, // Top vertex
-  //     -0.5, -0.5, // Bottom-left vertex
-  //     0.5, -0.5,  // Bottom-right vertex
-  // ]);
+  const triangleVertexData = new Float32Array([
+      0.0,  0.5, // Top vertex
+      -0.5, -0.5, // Bottom-left vertex
+      0.5, -0.5,  // Bottom-right vertex
+  ]);
 
   // Vertex data for a simple square
   // prettier-ignore
-  const vertexData = new Float32Array([
+  const squareVertexData = new Float32Array([
       -0.5,  -0.5, // bottom-left
       -0.5, 0.5, // top-left
       0.5, -0.5, // bottom-right
@@ -68,12 +68,19 @@ const main = async () => {
       0.5, 0.5, // top-right
   ]);
 
-  // Create a buffer for the vertex data
-  const vertexBuffer = device.createBuffer({
-    size: vertexData.byteLength,
+  // Create a buffer for the triangle vertex data
+  const triangleVertexBuffer = device.createBuffer({
+    size: triangleVertexData.byteLength,
     usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
   });
-  device.queue.writeBuffer(vertexBuffer, 0, vertexData);
+  device.queue.writeBuffer(triangleVertexBuffer, 0, triangleVertexData);
+
+  // create a buffer for the square vertex data
+  const squareVertexBuffer = device.createBuffer({
+    size: squareVertexData.byteLength,
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
+  });
+  device.queue.writeBuffer(squareVertexBuffer, 0, squareVertexData);
 
   // Shaders: Vertex and Fragment
   const shaderModule = device.createShaderModule({
@@ -119,7 +126,16 @@ const main = async () => {
     },
   });
 
-  // Create a render pass and draw the triangle
+  let renderTriangle = true;
+  window.addEventListener('keydown', (event) => {
+    console.log('event listener!!!');
+    if (event.key === 't') {
+      // Press 't' to toggle
+      renderTriangle = !renderTriangle;
+      render();
+    }
+  });
+
   function render() {
     const commandEncoder = device.createCommandEncoder();
     const textureView = webGPUContext.getCurrentTexture().createView();
@@ -136,11 +152,16 @@ const main = async () => {
     });
 
     renderPass.setPipeline(pipeline);
-    renderPass.setVertexBuffer(0, vertexBuffer);
-    // renderPass.draw(3); // Draw 3 vertices (triangle)
-    renderPass.draw(6); // Draw 3 vertices (triangle)
-    renderPass.end();
 
+    if (renderTriangle) {
+      renderPass.setVertexBuffer(0, triangleVertexBuffer);
+      renderPass.draw(3); // Draw 3 vertices (triangle)
+    } else {
+      renderPass.setVertexBuffer(0, squareVertexBuffer);
+      renderPass.draw(6); // Draw 6 vertices (square)
+    }
+
+    renderPass.end();
     device.queue.submit([commandEncoder.finish()]);
   }
 
