@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { main } from './slime-mold/index-01';
+import { main } from './slime-mold/index-02';
 
 function App() {
   useEffect(() => {
