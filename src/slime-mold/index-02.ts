@@ -51,16 +51,7 @@ const main = async () => {
 
   const module = device.createShaderModule({
     label: 'doubling compute module',
-    code: `
-      @group(0) @binding(0) var<storage, read_write> data: array<f32>;
-
-      @compute @workgroup_size(1) fn computeSomething(
-        @builtin(global_invocation_id) id: vec3u
-      ) {
-        let i = id.x;
-        data[i] = data[i] * 2.0;
-      }
-    `,
+    code: slimeMoldShader,
   });
 
   const pipeline = device.createComputePipeline({
@@ -98,7 +89,14 @@ const main = async () => {
   const bindGroup = device.createBindGroup({
     label: 'bindGroup for work buffer',
     layout: pipeline.getBindGroupLayout(0),
-    entries: [{ binding: 0, resource: { buffer: workBuffer } }],
+    entries: [
+      {
+        binding: 0,
+        resource: {
+          buffer: workBuffer,
+        },
+      },
+    ],
   });
 
   // Encode commands to do the computation
