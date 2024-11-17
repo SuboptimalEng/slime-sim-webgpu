@@ -99,11 +99,11 @@ const main = async () => {
               offset: 0,
               format: 'float32x2', // 2 x float32 => vec2<f32>
             },
-            // {
-            //   shaderLocation: 1, // @location(1)
-            //   offset: 2 * 4,
-            //   format: 'float32x4', // 4 x float32 => vec4<f32>
-            // },
+            {
+              shaderLocation: 1, // @location(1)
+              offset: 2 * 4,
+              format: 'float32x4', // 4 x float32 => vec4<f32>
+            },
           ],
         },
       ],
