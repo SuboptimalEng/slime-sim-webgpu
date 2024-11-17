@@ -21,11 +21,6 @@ const main = async () => {
     throw new Error('No canvas detected in the browser.');
   }
 
-  const webGPUContext = canvas.getContext('webgpu');
-  if (!webGPUContext) {
-    throw new Error('Cannot recieve WebGPU context from canvas.');
-  }
-
   if (!navigator.gpu) {
     throw new Error('WebGPU is not supported in this browser.');
   }
@@ -41,11 +36,13 @@ const main = async () => {
   const device = await adapter.requestDevice();
   const format = navigator.gpu.getPreferredCanvasFormat();
 
+  const webGPUContext = canvas.getContext('webgpu');
+  if (!webGPUContext) {
+    throw new Error('Cannot recieve WebGPU context from canvas.');
+  }
   webGPUContext.configure({
     device: device,
     format: format,
-    // format: 'rgba8unorm',
-    // alphaMode: 'premultiplied',
   });
 
   // prettier-ignore
@@ -56,105 +53,94 @@ const main = async () => {
     1.0, 1.0,  // Agent 2 velocity
   ]);
 
-  console.log('Initial agentData:', agentData); // Log initial data
+  // Vertex data for a simple square
+  // prettier-ignore
+  const squareVertexData = new Float32Array([
+    -0.5,  -0.5, // bottom-left
+     1.0,   0.0,   0.0,   1.0, // color
+    -0.5,   0.5, // top-left
+     0.0,   1.0,   0.0,   1.0, // color
+     0.5,  -0.5, // bottom-right
+     0.0,   0.0,   1.0,   1.0, // color
 
-  // Create the agent buffer (input data)
-  const agentBuffer = device.createBuffer({
-    label: 'work buffer',
-    size: agentData.byteLength,
-    usage:
-      GPUBufferUsage.STORAGE |
-      GPUBufferUsage.COPY_DST |
-      GPUBufferUsage.COPY_SRC,
+     0.5, -0.5, // bottom-right
+     0.0,   0.0,   1.0,   1.0, // color
+    -0.5,  0.5, // top-left
+     0.0,   1.0,   0.0,   1.0, // color
+     0.5,  0.5, // top-right
+     1.0,   0.0,   1.0,   1.0, // color
+  ]);
+
+  // create a buffer for the square vertex data
+  const squareVertexBuffer = device.createBuffer({
+    size: squareVertexData.byteLength,
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
   });
+  device.queue.writeBuffer(squareVertexBuffer, 0, squareVertexData);
 
-  device.queue.writeBuffer(agentBuffer, 0, agentData);
-
-  // Create the read buffer (output data)
-  const readBuffer = device.createBuffer({
-    label: 'read buffer',
-    size: agentData.byteLength,
-    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-    // usage:
-    //   GPUBufferUsage.STORAGE |
-    //   GPUBufferUsage.COPY_SRC |
-    //   GPUBufferUsage.MAP_READ,
-  });
-
-  // Bind group layout setup (corrected)
-  const bindGroupLayout = device.createBindGroupLayout({
-    entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: 'storage',
-        },
-      },
-    ],
-  });
-
-  // Create the bind group
-  const bindGroup = device.createBindGroup({
-    layout: bindGroupLayout,
-    entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer: agentBuffer,
-        },
-      },
-    ],
-  });
-
-  const pipelineLayout = device.createPipelineLayout({
-    bindGroupLayouts: [bindGroupLayout],
-  });
-
+  // Shaders: Vertex and Fragment
   const shaderModule = device.createShaderModule({
-    label: 'slime mold shader module',
+    label: 'shader module',
     code: slimeMoldShader,
   });
 
-  // Compute pipeline setup
-  const computePipeline = device.createComputePipeline({
-    layout: pipelineLayout,
-    compute: {
+  // Create the render pipeline
+  const pipeline = device.createRenderPipeline({
+    layout: 'auto',
+    vertex: {
       module: shaderModule,
-      entryPoint: 'main',
+      entryPoint: 'main_vertex',
+      buffers: [
+        {
+          arrayStride: 2 * 4 + 4 * 4, // 2 floats per vertex (4 bytes each)
+          attributes: [
+            {
+              shaderLocation: 0, // @location(0)
+              offset: 0,
+              format: 'float32x2', // 2 x float32 => vec2<f32>
+            },
+            // {
+            //   shaderLocation: 1, // @location(1)
+            //   offset: 2 * 4,
+            //   format: 'float32x4', // 4 x float32 => vec4<f32>
+            // },
+          ],
+        },
+      ],
+    },
+    fragment: {
+      module: shaderModule,
+      entryPoint: 'main_fragment',
+      targets: [
+        {
+          format: format,
+        },
+      ],
+    },
+    primitive: {
+      topology: 'triangle-list',
     },
   });
 
-  // Dispatch compute pass
   const commandEncoder = device.createCommandEncoder();
-  const computePass = commandEncoder.beginComputePass();
-  computePass.setPipeline(computePipeline);
-  computePass.setBindGroup(0, bindGroup);
-  computePass.dispatchWorkgroups(agentData.length / 2); // One workgroup per agent
-  computePass.end();
+  const textureView = webGPUContext.getCurrentTexture().createView();
 
-  commandEncoder.copyBufferToBuffer(
-    agentBuffer, // Source buffer
-    0, // Source offset
-    readBuffer, // Destination buffer
-    0, // Destination offset
-    agentBuffer.size, // Number of bytes to copy
-  );
+  const renderPass = commandEncoder.beginRenderPass({
+    colorAttachments: [
+      {
+        view: textureView,
+        clearValue: { r: 0, g: 0, b: 0, a: 1 },
+        loadOp: 'clear',
+        storeOp: 'store',
+      },
+    ],
+  });
+  renderPass.setPipeline(pipeline);
+  renderPass.setVertexBuffer(0, squareVertexBuffer);
+  renderPass.draw(6);
+  renderPass.end();
 
-  // Submit the command
   device.queue.submit([commandEncoder.finish()]);
-
-  // Log the updated data to the console
-  console.log('Updated agentData:');
-
-  await readBuffer.mapAsync(GPUMapMode.READ); // Wait for the mapping to complete
-
-  const mappedRange = readBuffer.getMappedRange(); // Get the mapped range
-  const resultData = new Float32Array(mappedRange); // Convert it to a typed array
-
-  console.log('Result Data:', resultData);
-
-  readBuffer.unmap(); // Unmap after reading
 };
 
 export { main };
