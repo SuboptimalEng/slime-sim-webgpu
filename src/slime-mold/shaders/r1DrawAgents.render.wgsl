@@ -22,14 +22,14 @@ fn vertexShader(
 // =============================================================
 @group(0) @binding(0) var<uniform> uSlimeSim: SlimeSimUniformsStruct;
 @group(0) @binding(1) var<uniform> uColorization: ColorizationUniformsStruct;
-@group(0) @binding(2) var textureInput: texture_2d<f32>;
+@group(0) @binding(2) var readFromThisTexture: texture_2d<f32>;
 
 fn calculateNormal(uv: vec2f) -> vec3f {
     // Sample neighboring pixels
-    let h_x1 = textureLoad(textureInput, vec2i(uv) + vec2i(1, 0), 0).r;
-    let h_x0 = textureLoad(textureInput, vec2i(uv) - vec2i(1, 0), 0).r;
-    let h_y1 = textureLoad(textureInput, vec2i(uv) + vec2i(0, 1), 0).r;
-    let h_y0 = textureLoad(textureInput, vec2i(uv) - vec2i(0, 1), 0).r;
+    let h_x1 = textureLoad(readFromThisTexture, vec2i(uv) + vec2i(1, 0), 0).r;
+    let h_x0 = textureLoad(readFromThisTexture, vec2i(uv) - vec2i(1, 0), 0).r;
+    let h_y1 = textureLoad(readFromThisTexture, vec2i(uv) + vec2i(0, 1), 0).r;
+    let h_y0 = textureLoad(readFromThisTexture, vec2i(uv) - vec2i(0, 1), 0).r;
 
     // Calculate gradients
     let strength = 2.0;
@@ -46,7 +46,7 @@ fn fragmentShader(
 ) -> @location(0) vec4<f32> {
   // Sample the texture
   let uv = fragCoord.xy / uSlimeSim.resolution;
-  let texColor = textureLoad(textureInput, vec2i(uv * uSlimeSim.resolution), 0);
+  let texColor = textureLoad(readFromThisTexture, vec2i(uv * uSlimeSim.resolution), 0);
 
   var scaledUv = (2.0 * fragCoord.xy - uSlimeSim.resolution) / uSlimeSim.resolution.y;
   let checker = vec2(floor(scaledUv * 8.0));
@@ -107,7 +107,7 @@ fn fragmentShader(
   var litColor = myColorVariable * texColor.rgb * ambientLight + lc * specularIntensity;
   // var litColor = vec3f(1.0, 1.0, 1.0) * specularIntensity;
 
-  let color: vec4f = textureLoad(textureInput, vec2i(uv * uSlimeSim.resolution), 0);
+  let color: vec4f = textureLoad(readFromThisTexture, vec2i(uv * uSlimeSim.resolution), 0);
 
   // litColor = mix(surfaceNormal + vec3(0.0, 0.0, 1.0), litColor , smoothstep(0.9, 1.0, color.g));
   // litColor = (surfaceNormal + vec3(0.0, 0.0, 1.0)) + litColor;

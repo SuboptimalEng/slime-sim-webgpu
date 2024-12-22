@@ -8,8 +8,8 @@ struct Agent {
 
 @group(0) @binding(0) var<uniform> uSlimeSim: SlimeSimUniformsStruct;
 @group(0) @binding(1) var<storage, read_write> agentsArray: array<Agent>;
-@group(0) @binding(2) var inputAgentsTexture: texture_2d<f32>;
-@group(0) @binding(3) var outputAgentsTexture: texture_storage_2d<rgba8unorm, write>;
+@group(0) @binding(2) var readFromThisTexture: texture_2d<f32>;
+@group(0) @binding(3) var writeToThisTexture: texture_storage_2d<rgba8unorm, write>;
 
 fn rotationMatrix(degrees: f32) -> mat2x2f {
   let radians = radians(degrees); // Convert degrees to radians
@@ -36,7 +36,7 @@ fn checkTrail(agentPosition: vec2f, newDir: vec2f) -> f32 {
     for (var y = -sensorWidth; y <= sensorWidth; y++) {
       let sampleX = i32(sensorPosition.x) + x;
       let sampleY = i32(sensorPosition.y) + y;
-      sum += textureLoad(inputAgentsTexture, vec2i(sampleX, sampleY), 0).r;
+      sum += textureLoad(readFromThisTexture, vec2i(sampleX, sampleY), 0).r;
     }
   }
 
@@ -143,7 +143,7 @@ fn updateAgents(
         // We need to case offset to i32 since textureStore takes vec2i.
         // agentCenterPos has already been cast during initialization.
         let pixelCoordToColor = agentCenterPos + vec2i(offset);
-        textureStore(outputAgentsTexture, pixelCoordToColor, white);
+        textureStore(writeToThisTexture, pixelCoordToColor, white);
       }
     }
   }

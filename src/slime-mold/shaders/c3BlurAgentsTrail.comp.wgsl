@@ -5,8 +5,8 @@
 // @group(0) @binding(0) var<uniform> : vec2u;
 @group(0) @binding(0) var<uniform> uSlimeSim: SlimeSimUniformsStruct;
 @group(0) @binding(1) var<uniform> uColorization: ColorizationUniformsStruct;
-@group(0) @binding(2) var readFadeTrailTexture: texture_2d<f32>;
-@group(0) @binding(3) var writeFadeTrailTexture: texture_storage_2d<rgba8unorm, write>;
+@group(0) @binding(2) var readFromThisTexture: texture_2d<f32>;
+@group(0) @binding(3) var writeToThisTexture: texture_storage_2d<rgba8unorm, write>;
 
 @compute
 // @workgroup_size(1)
@@ -20,7 +20,7 @@ fn blurAgentsTrail(
   var pixelCount = 0.0;
   // setting diffuseKernel to 0 means it's essentially not running
   // todo: see if using this is useful for gradient colors
-  var diffuseKernel = i32(uColorization.blurTrail);
+  var uBlurTrail = i32(uColorization.blurTrail);
 
   let canvasSize = uSlimeSim.resolution;
   if (id.x >= u32(canvasSize.x) || id.y >= u32(canvasSize.y)) {
@@ -28,12 +28,12 @@ fn blurAgentsTrail(
     return; // Avoid out-of-bounds access
   }
 
-  if (diffuseKernel > 0) {
+  if (uBlurTrail > 0) {
     // why is this for loop slow?
     // for (var x = -1; x <= 1; x++) {
     //   for (var y = -1; y <= 1; y++) {
     //     var currPos = vec2i(id.xy) + vec2i(x, y);
-    //     cumulativeColor += textureLoad(readFadeTrailTexture, currPos, 0);
+    //     cumulativeColor += textureLoad(readFromThisTexture, currPos, 0);
     //     pixelCount += 1;
     //   }
     // }
@@ -41,19 +41,19 @@ fn blurAgentsTrail(
 
     // this seems faster?
     var currPos = vec2i(id.xy);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(-1, 1), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(0, 1), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(1, 1), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(-1, 0), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(0, 0), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(1, 0), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(-1, -1), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(0, -1), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(1, -1), 0);
+    cumulativeColor += textureLoad(readFromThisTexture, currPos + vec2i(-1, 1), 0);
+    cumulativeColor += textureLoad(readFromThisTexture, currPos + vec2i(0, 1), 0);
+    cumulativeColor += textureLoad(readFromThisTexture, currPos + vec2i(1, 1), 0);
+    cumulativeColor += textureLoad(readFromThisTexture, currPos + vec2i(-1, 0), 0);
+    cumulativeColor += textureLoad(readFromThisTexture, currPos + vec2i(0, 0), 0);
+    cumulativeColor += textureLoad(readFromThisTexture, currPos + vec2i(1, 0), 0);
+    cumulativeColor += textureLoad(readFromThisTexture, currPos + vec2i(-1, -1), 0);
+    cumulativeColor += textureLoad(readFromThisTexture, currPos + vec2i(0, -1), 0);
+    cumulativeColor += textureLoad(readFromThisTexture, currPos + vec2i(1, -1), 0);
     cumulativeColor /= 9.0;
   } else {
-    cumulativeColor += textureLoad(readFadeTrailTexture, vec2i(id.xy), 0);
+    cumulativeColor += textureLoad(readFromThisTexture, vec2i(id.xy), 0);
   }
 
-  textureStore(writeFadeTrailTexture, id.xy, cumulativeColor);
+  textureStore(writeToThisTexture, id.xy, cumulativeColor);
 }

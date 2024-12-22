@@ -1,7 +1,5 @@
 import { Pane } from 'tweakpane';
 import commonUniformsWGSL from './shaders/commonUniforms.wgsl?raw';
-import c1UpdateAgentsWGSL from './shaders/c1UpdateAgents.comp.wgsl?raw';
-import c2FadeAgentsTrailWGSL from './shaders/c2FadeAgentsTrail.comp.wgsl?raw';
 import c3BlurAgentsTrailWGSL from './shaders/c3BlurAgentsTrail.comp.wgsl?raw';
 import r1DrawAgentsWGSL from './shaders/r1DrawAgents.render.wgsl?raw';
 import { UNIFORMS_SLIME_SIM } from './uniforms';
@@ -11,25 +9,30 @@ import {
   initializeAgents,
   initializeColorizationUniforms,
   initializeSlimeSimUniforms,
-} from './initializeFunctions';
+} from './initializeFns';
+import {
+  createUpdateAgentsComputePipeline,
+  createFadeAgentsTrailComputePipeline,
+  createBlurAgentsTrailComputePipeline,
+} from './createPipelineFns';
 
-// ===================================
+// =============================================================
 // Initialize tweak pane.
-// ===================================
+// =============================================================
 let initializedPane: Pane = new Pane();
 let rafId: number = 0;
 
 const main = async () => {
-  // ===================================
+  // =============================================================
   // canvas -> ref to canvas, mainly used width/height info
   // device -> everything related to webgpu done from device
   // canvasFormat -> needed for render pipeline fragment shader settings
   // context -> needed for render pass
-  // ===================================
+  // =============================================================
   const { canvas, device, canvasFormat, context } = await initializeWebGPU();
 
-  // ===================================
-  // Create gpu storage texture that can be written to in compute shaders.
+  // =============================================================
+  // Initialize gpu storage texture that can be written to in compute shaders.
   //
   // Storage textures in WebGPU do not support read_write yet. This means
   // that we can write to storage texture in a compute pass, but we cannot
@@ -37,7 +40,7 @@ const main = async () => {
   // a separate texture that copies the data from the storage texture after
   // every compute pass is complete. We can use this second texture to read
   // from in other compute passes.
-  // ===================================
+  // =============================================================
   const { gpuTextureForStorage, gpuTextureForRead } = initializeGPUTextures(
     device,
     canvas,
@@ -45,9 +48,9 @@ const main = async () => {
   const gpuTextureForStorageView = gpuTextureForStorage.createView();
   const gpuTextureForReadView = gpuTextureForRead.createView();
 
-  // ===================================
-  // Set up the agents buffer.
-  // ===================================
+  // =============================================================
+  // Initialize the agents buffer.
+  // =============================================================
   const agentsBufferGPU = initializeAgents(
     device,
     canvas,
@@ -56,265 +59,64 @@ const main = async () => {
     gpuTextureForRead,
   );
 
-  // ===================================
-  // Set up slime sim uniforms and tweakpane.
-  // ===================================
+  // =============================================================
+  // Initialize slime sim uniforms and tweakpane.
+  // =============================================================
   const slimeSimUniformsBufferGPU = initializeSlimeSimUniforms(
     device,
     canvas,
     initializedPane,
   );
 
-  // ===================================
-  // Set up colorization uniforms and tweakpane.
-  // ===================================
+  // =============================================================
+  // Initialize colorization uniforms and tweakpane.
+  // =============================================================
   const colorizationUniformsBufferGPU = initializeColorizationUniforms(
     device,
     initializedPane,
   );
 
-  // ===================================
-  // Set up the updateAgents compute pass.
+  // =============================================================
+  // Create updateAgents compute pipeline.
   //
   // This pass updates the position + direction of each agent.
-  // It also draws the result onto a texture.
-  // ===================================
-  const updateAgentsWGSL = [commonUniformsWGSL, c1UpdateAgentsWGSL].join('');
-  const updateAgentsShaderModule = device.createShaderModule({
-    label: 'update agents: create shader module',
-    code: updateAgentsWGSL,
-  });
-  const updateAgentsComputeBindGroupLayout = device.createBindGroupLayout({
-    label: 'update agents: create compute bind group layout',
-    entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: 'uniform',
-        },
-      },
-      {
-        binding: 1,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: 'storage',
-        },
-      },
-      {
-        binding: 2,
-        visibility: GPUShaderStage.COMPUTE,
-        texture: {
-          viewDimension: '2d',
-        },
-      },
-      {
-        binding: 3,
-        visibility: GPUShaderStage.COMPUTE,
-        storageTexture: {
-          format: 'rgba8unorm',
-          access: 'write-only',
-          viewDimension: '2d',
-        },
-      },
-    ],
-  });
-  const updateAgentsComputePipelineLayout = device.createPipelineLayout({
-    label: 'update agents: create compute pipeline layout',
-    bindGroupLayouts: [updateAgentsComputeBindGroupLayout],
-  });
-  const updateAgentsComputePipeline = device.createComputePipeline({
-    label: 'update agents: create compute pipeline',
-    layout: updateAgentsComputePipelineLayout,
-    compute: {
-      entryPoint: 'updateAgents',
-      module: updateAgentsShaderModule,
-    },
-  });
-  const updateAgentsComputeBindGroup = device.createBindGroup({
-    label: 'update agents: create compute bind group',
-    layout: updateAgentsComputeBindGroupLayout,
-    entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer: slimeSimUniformsBufferGPU,
-        },
-      },
-      {
-        binding: 1,
-        resource: {
-          buffer: agentsBufferGPU,
-        },
-      },
-      {
-        binding: 2,
-        resource: gpuTextureForReadView,
-      },
-      {
-        binding: 3,
-        resource: gpuTextureForStorageView,
-      },
-    ],
-  });
+  // It also draws the result onto a storage texture.
+  // =============================================================
+  const { updateAgentsComputePipeline, updateAgentsComputeBindGroup } =
+    createUpdateAgentsComputePipeline(
+      device,
+      slimeSimUniformsBufferGPU,
+      agentsBufferGPU,
+      gpuTextureForReadView,
+      gpuTextureForStorageView,
+    );
 
-  // ===================================
-  // Set up fadeAgentsTrail compute pass.
-  // ===================================
-  // prettier-ignore
-  const fadeAgentsTrailWGSL = [commonUniformsWGSL, c2FadeAgentsTrailWGSL].join('');
-  const fadeAgentsTrailShaderModule = device.createShaderModule({
-    label: 'fade agents trail: create shader module',
-    code: fadeAgentsTrailWGSL,
-  });
-  const fadeAgentsTrailComputeBindGroupLayout = device.createBindGroupLayout({
-    label: 'fade agents trail: create bind group layout',
-    entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: 'uniform',
-        },
-      },
-      {
-        binding: 1,
-        visibility: GPUShaderStage.COMPUTE,
-        texture: {
-          viewDimension: '2d',
-        },
-      },
-      {
-        binding: 2,
-        visibility: GPUShaderStage.COMPUTE,
-        storageTexture: {
-          format: 'rgba8unorm',
-          access: 'write-only',
-          viewDimension: '2d',
-        },
-      },
-    ],
-  });
-  const fadeAgentsTrailComputePipelineLayout = device.createPipelineLayout({
-    label: 'fade agents trail: create compute pipeline layout',
-    bindGroupLayouts: [fadeAgentsTrailComputeBindGroupLayout],
-  });
-  const fadeAgentsTrailComputePipeline = device.createComputePipeline({
-    label: 'fade agents trail: create compute pipeline',
-    layout: fadeAgentsTrailComputePipelineLayout,
-    compute: {
-      entryPoint: 'fadeAgentsTrail',
-      module: fadeAgentsTrailShaderModule,
-    },
-  });
-  const fadeAgentsTrailBindGroup = device.createBindGroup({
-    label: 'fade agents trail: create bind group',
-    // layout: fadeAgentsTrailComputePipeline.getBindGroupLayout(0),
-    layout: fadeAgentsTrailComputeBindGroupLayout,
-    entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer: slimeSimUniformsBufferGPU,
-        },
-      },
-      {
-        binding: 1,
-        resource: gpuTextureForReadView,
-      },
-      {
-        binding: 2,
-        resource: gpuTextureForStorageView,
-      },
-    ],
-  });
+  // =============================================================
+  // Create fadeAgentsTrail compute pipeline.
+  // =============================================================
+  const { fadeAgentsTrailComputePipeline, fadeAgentsTrailBindGroup } =
+    createFadeAgentsTrailComputePipeline(
+      device,
+      slimeSimUniformsBufferGPU,
+      gpuTextureForReadView,
+      gpuTextureForStorageView,
+    );
 
-  // ===================================
-  // Blur agents trail compute pass.
-  // ===================================
-  // prettier-ignore
-  const blurAgentsTrailWGSL = [commonUniformsWGSL, c3BlurAgentsTrailWGSL].join('');
-  const blurAgentsTrailShaderModule = device.createShaderModule({
-    label: 'blur agents trail: create shader module',
-    code: blurAgentsTrailWGSL,
-  });
-  const blurAgentsTrailComputeBindGroupLayout = device.createBindGroupLayout({
-    label: 'blur agents trail: create bindgroup layout',
-    entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: 'uniform',
-        },
-      },
-      {
-        binding: 1,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: 'uniform',
-        },
-      },
-      {
-        binding: 2,
-        visibility: GPUShaderStage.COMPUTE,
-        texture: {
-          viewDimension: '2d',
-        },
-      },
-      {
-        binding: 3,
-        visibility: GPUShaderStage.COMPUTE,
-        storageTexture: {
-          format: 'rgba8unorm',
-          access: 'write-only',
-          viewDimension: '2d',
-        },
-      },
-    ],
-  });
-  const blurAgentsTrailPipelineLayout = device.createPipelineLayout({
-    label: 'blur agents trail: create pipeline layout',
-    bindGroupLayouts: [blurAgentsTrailComputeBindGroupLayout],
-  });
-  const blurAgentsTrailPipeline = device.createComputePipeline({
-    label: 'blur agents trail: create compute pipeline',
-    layout: blurAgentsTrailPipelineLayout,
-    compute: {
-      entryPoint: 'blurAgentsTrail',
-      module: blurAgentsTrailShaderModule,
-    },
-  });
-  const blurAgentsTrailBindGroup = device.createBindGroup({
-    label: 'blur agents trail: create bind group',
-    layout: blurAgentsTrailComputeBindGroupLayout,
-    entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer: slimeSimUniformsBufferGPU,
-        },
-      },
-      {
-        binding: 1,
-        resource: {
-          buffer: colorizationUniformsBufferGPU,
-        },
-      },
-      {
-        binding: 2,
-        resource: gpuTextureForReadView,
-      },
-      {
-        binding: 3,
-        resource: gpuTextureForStorageView,
-      },
-    ],
-  });
+  // =============================================================
+  // Create blurAgentsTrail compute pipeline.
+  // =============================================================
+  const { blurAgentsTrailPipeline, blurAgentsTrailBindGroup } =
+    createBlurAgentsTrailComputePipeline(
+      device,
+      slimeSimUniformsBufferGPU,
+      colorizationUniformsBufferGPU,
+      gpuTextureForReadView,
+      gpuTextureForStorageView,
+    );
 
-  // ===================================
+  // =============================================================
   // Draw agents render pass.
-  // ===================================
+  // =============================================================
   const drawAgentsWGSL = [commonUniformsWGSL, r1DrawAgentsWGSL].join('');
   const drawAgentsShaderModule = device.createShaderModule({
     label: 'draw agents: create shader module',
@@ -473,7 +275,7 @@ const main = async () => {
 };
 
 const cleanUp = () => {
-  // remove Pane when refreshing the page.
+  // Remove initializedPane when refreshing the page.
   initializedPane.dispose();
   cancelAnimationFrame(rafId);
 };
