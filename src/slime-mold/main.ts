@@ -161,9 +161,8 @@ const main = async () => {
   // ===================================
   // Set up fadeAgentsTrail compute pass.
   // ===================================
-  const fadeAgentsTrailWGSL = [commonUniformsWGSL, c2FadeAgentsTrailWGSL].join(
-    '',
-  );
+  // prettier-ignore
+  const fadeAgentsTrailWGSL = [commonUniformsWGSL, c2FadeAgentsTrailWGSL].join('');
   const fadeAgentsTrailShaderModule = device.createShaderModule({
     label: 'fade agents trail: create shader module',
     code: fadeAgentsTrailWGSL,
