@@ -12,7 +12,7 @@ import {
   initializeAgents,
   initializeColorizationUniforms,
   initializeSlimeSimUniforms,
-} from './helpers';
+} from './initializeFunctions';
 
 // ===================================
 // initialize tweak pane
@@ -47,7 +47,7 @@ const main = async () => {
   const gpuTextureForReadView = gpuTextureForRead.createView();
 
   // ===================================
-  // set up agents buffer
+  // Set up the agents buffer.
   // ===================================
   const agentsBufferGPU = initializeAgents(
     device,
@@ -58,7 +58,7 @@ const main = async () => {
   );
 
   // ===================================
-  // set up tweakpane and uniforms
+  // Set up slime sim uniforms and tweakpane.
   // ===================================
   const slimeSimUniformsBufferGPU = initializeSlimeSimUniforms(
     device,
@@ -75,7 +75,7 @@ const main = async () => {
   // );
 
   // ===================================
-  // set up uniforms for colorization
+  // Set up colorization uniforms and tweakpane.
   // ===================================
   const colorizationUniformsBufferGPU = initializeColorizationUniforms(
     device,
@@ -83,7 +83,7 @@ const main = async () => {
   );
 
   // ===================================
-  // create shader modules
+  // Create shader modules.
   // ===================================
   const wgslShaderCode = [
     commonUniformsWGSL,
@@ -98,7 +98,10 @@ const main = async () => {
   });
 
   // ===================================
-  // set up update agents compute pass
+  // Set up the updateAgents compute pass.
+  //
+  // This pass updates the position + direction of each agent.
+  // It also draws the result onto a texture.
   // ===================================
   const updateAgentsComputeBindGroupLayout = device.createBindGroupLayout({
     label: 'update agents: create compute bind group layout',
@@ -141,7 +144,6 @@ const main = async () => {
   });
   const updateAgentsComputePipeline = device.createComputePipeline({
     label: 'update agents: create compute pipeline',
-    // layout: 'auto',
     layout: updateAgentsComputePipelineLayout,
     compute: {
       module: shaderModule,
@@ -178,7 +180,7 @@ const main = async () => {
   });
 
   // ===================================
-  // fade agents trail compute pass
+  // Set up fadeAgentsTrail compute pass.
   // ===================================
   const fadeAgentsTrailComputeBindGroupLayout = device.createBindGroupLayout({
     label: 'fade agents trail: create bind group layout',
