@@ -53,25 +53,6 @@ const initializeWebGPU = async () => {
   return { canvas, canvasFormat, context, device };
 };
 
-// const initializeCanvasSizeUniforms = (
-//   device: GPUDevice,
-//   canvas: HTMLCanvasElement,
-// ) => {
-//   const canvasUniformsCPU = new Uint32Array(4);
-//   const canvasUniformsBufferGPU = device.createBuffer({
-//     label: 'create uniforms buffer for gpu',
-//     size: canvasUniformsCPU.byteLength,
-//     usage:
-//       GPUBufferUsage.COPY_DST |
-//       GPUBufferUsage.COPY_SRC |
-//       GPUBufferUsage.UNIFORM,
-//   });
-//   canvasUniformsCPU[0] = canvas.width;
-//   canvasUniformsCPU[1] = canvas.height;
-//   device.queue.writeBuffer(canvasUniformsBufferGPU, 0, canvasUniformsCPU);
-//   return canvasUniformsBufferGPU;
-// };
-
 const initializeSlimeSimUniforms = (
   device: GPUDevice,
   canvas: HTMLCanvasElement,
@@ -289,7 +270,6 @@ const initializeAgents = (
 
 export {
   initializeWebGPU,
-  // initializeCanvasSizeUniforms,
   initializeGPUTextures,
   initializeAgents,
   initializeColorizationUniforms,

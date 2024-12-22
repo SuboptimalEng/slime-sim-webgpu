@@ -7,7 +7,6 @@ import r1DrawAgentsWGSL from './shaders/r1DrawAgents.render.wgsl?raw';
 import { UNIFORMS_SLIME_SIM } from './uniforms';
 import {
   initializeWebGPU,
-  // initializeCanvasSizeUniforms,
   initializeGPUTextures,
   initializeAgents,
   initializeColorizationUniforms,
@@ -65,14 +64,6 @@ const main = async () => {
     canvas,
     initializedPane,
   );
-
-  // ===================================
-  // set up uniforms for canvasSize
-  // ===================================
-  // const canvasSizeUniformsBufferGPU = initializeCanvasSizeUniforms(
-  //   device,
-  //   canvas,
-  // );
 
   // ===================================
   // Set up colorization uniforms and tweakpane.
@@ -302,7 +293,6 @@ const main = async () => {
       {
         binding: 0,
         resource: {
-          // buffer: canvasSizeUniformsBufferGPU,
           buffer: slimeSimUniformsBufferGPU,
         },
       },
