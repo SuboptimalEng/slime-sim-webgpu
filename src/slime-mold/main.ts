@@ -7,10 +7,11 @@ import r1DrawAgentsWGSL from './shaders/r1DrawAgents.render.wgsl?raw';
 import { UNIFORMS_SLIME_SIM } from './uniforms';
 import {
   initializeWebGPU,
-  initializeCanvasSizeUniforms,
+  // initializeCanvasSizeUniforms,
+  initializeGPUTextures,
+  initializeAgents,
   initializeColorizationUniforms,
   initializeSlimeSimUniforms,
-  initializeAgents,
 } from './helpers';
 
 // ===================================
@@ -29,24 +30,8 @@ const main = async () => {
   const { canvas, device, canvasFormat, context } = await initializeWebGPU();
 
   // ===================================
-  // create gpu storage texture that can be written to in compute shaders
-  // ===================================
-  const gpuTextureForStorage = device.createTexture({
-    label: 'create texture A on gpu',
-    format: 'rgba8unorm',
-    size: {
-      width: canvas.width,
-      height: canvas.height,
-    },
-    usage:
-      GPUTextureUsage.COPY_DST |
-      GPUTextureUsage.COPY_SRC |
-      GPUTextureUsage.STORAGE_BINDING |
-      GPUTextureUsage.TEXTURE_BINDING,
-  });
-  const gpuTextureViewForStorage = gpuTextureForStorage.createView();
-
-  // ===================================
+  // Create gpu storage texture that can be written to in compute shaders.
+  //
   // Storage textures in WebGPU do not support read_write yet. This means
   // that we can write to storage texture in a compute pass, but we cannot
   // read from it in another compute pass. To get around this, we can create
@@ -54,16 +39,12 @@ const main = async () => {
   // every compute pass is complete. We can use this second texture to read
   // from in other compute passes.
   // ===================================
-  const gpuTextureForRead = device.createTexture({
-    label: 'create texture B on gpu',
-    format: 'rgba8unorm',
-    size: {
-      width: canvas.width,
-      height: canvas.height,
-    },
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-  });
-  const gpuTextureViewForRead = gpuTextureForRead.createView();
+  const { gpuTextureForStorage, gpuTextureForRead } = initializeGPUTextures(
+    device,
+    canvas,
+  );
+  const gpuTextureForStorageView = gpuTextureForStorage.createView();
+  const gpuTextureForReadView = gpuTextureForRead.createView();
 
   // ===================================
   // set up agents buffer
@@ -73,6 +54,7 @@ const main = async () => {
     canvas,
     initializedPane,
     gpuTextureForStorage,
+    gpuTextureForRead,
   );
 
   // ===================================
@@ -186,11 +168,11 @@ const main = async () => {
       },
       {
         binding: 2,
-        resource: gpuTextureViewForRead,
+        resource: gpuTextureForReadView,
       },
       {
         binding: 3,
-        resource: gpuTextureViewForStorage,
+        resource: gpuTextureForStorageView,
       },
     ],
   });
@@ -252,11 +234,11 @@ const main = async () => {
       },
       {
         binding: 1,
-        resource: gpuTextureViewForRead,
+        resource: gpuTextureForReadView,
       },
       {
         binding: 2,
-        resource: gpuTextureViewForStorage,
+        resource: gpuTextureForStorageView,
       },
     ],
   });
@@ -330,11 +312,11 @@ const main = async () => {
       },
       {
         binding: 2,
-        resource: gpuTextureViewForRead,
+        resource: gpuTextureForReadView,
       },
       {
         binding: 3,
-        resource: gpuTextureViewForStorage,
+        resource: gpuTextureForStorageView,
       },
     ],
   });
@@ -405,7 +387,7 @@ const main = async () => {
       },
       {
         binding: 2,
-        resource: gpuTextureViewForStorage,
+        resource: gpuTextureForStorageView,
       },
     ],
   });

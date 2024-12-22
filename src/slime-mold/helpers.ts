@@ -233,10 +233,11 @@ const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
   return colorizationUniformsBufferGPU;
 };
 
-const initializeGPUTexture = (
+const resetGPUTextures = (
   device: GPUDevice,
   canvas: HTMLCanvasElement,
-  gpuTexture: GPUTexture,
+  gpuTextureForStorage: GPUTexture,
+  gpuTextureForRead: GPUTexture,
 ) => {
   const size = Math.floor(canvas.width * canvas.height) * 4;
   const textureDataCPU = new Int8Array(size);
@@ -246,9 +247,24 @@ const initializeGPUTexture = (
     textureDataCPU[i * 4 + 2] = 0;
     textureDataCPU[i * 4 + 3] = 255;
   }
+
   device.queue.writeTexture(
     {
-      texture: gpuTexture,
+      texture: gpuTextureForStorage,
+    },
+    textureDataCPU,
+    {
+      bytesPerRow: canvas.width * 4,
+    },
+    {
+      width: canvas.width,
+      height: canvas.height,
+    },
+  );
+
+  device.queue.writeTexture(
+    {
+      texture: gpuTextureForRead,
     },
     textureDataCPU,
     {
@@ -261,7 +277,7 @@ const initializeGPUTexture = (
   );
 };
 
-const initializeAgentsBuffer = (
+const resetAgentsBuffer = (
   device: GPUDevice,
   canvas: HTMLCanvasElement,
   agentsBufferGPU: GPUBuffer,
@@ -292,11 +308,43 @@ const initializeAgentsBuffer = (
   return agentsBufferGPU;
 };
 
+const initializeGPUTextures = (
+  device: GPUDevice,
+  canvas: HTMLCanvasElement,
+) => {
+  const gpuTextureForStorage = device.createTexture({
+    label: 'create texture A for storage on gpu',
+    format: 'rgba8unorm',
+    size: {
+      width: canvas.width,
+      height: canvas.height,
+    },
+    usage:
+      GPUTextureUsage.COPY_DST |
+      GPUTextureUsage.COPY_SRC |
+      GPUTextureUsage.STORAGE_BINDING |
+      GPUTextureUsage.TEXTURE_BINDING,
+  });
+
+  const gpuTextureForRead = device.createTexture({
+    label: 'create texture B for read on gpu',
+    format: 'rgba8unorm',
+    size: {
+      width: canvas.width,
+      height: canvas.height,
+    },
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
+  });
+
+  return { gpuTextureForStorage, gpuTextureForRead };
+};
+
 const initializeAgents = (
   device: GPUDevice,
   canvas: HTMLCanvasElement,
   pane: Pane,
-  gpuTexture: GPUTexture,
+  gpuTextureForStorage: GPUTexture,
+  gpuTextureForRead: GPUTexture,
 ) => {
   const simulationFolder = pane.addFolder({ title: 'Simulation' });
   simulationFolder.addBinding(UNIFORMS_SLIME_SIM.numOfAgents, 'value', {
@@ -326,12 +374,12 @@ const initializeAgents = (
       GPUBufferUsage.COPY_DST,
   });
 
-  initializeGPUTexture(device, canvas, gpuTexture);
-  initializeAgentsBuffer(device, canvas, agentsBufferGPU);
+  resetAgentsBuffer(device, canvas, agentsBufferGPU);
+  resetGPUTextures(device, canvas, gpuTextureForStorage, gpuTextureForRead);
 
   simulationFolder.on('change', (e) => {
-    initializeGPUTexture(device, canvas, gpuTexture);
-    initializeAgentsBuffer(device, canvas, agentsBufferGPU);
+    resetAgentsBuffer(device, canvas, agentsBufferGPU);
+    resetGPUTextures(device, canvas, gpuTextureForStorage, gpuTextureForRead);
   });
 
   downloadImageButton.on('click', (e) => {
@@ -359,7 +407,8 @@ const initializeAgents = (
 export {
   initializeWebGPU,
   // initializeCanvasSizeUniforms,
+  initializeGPUTextures,
+  initializeAgents,
   initializeColorizationUniforms,
   initializeSlimeSimUniforms,
-  initializeAgents,
 };
