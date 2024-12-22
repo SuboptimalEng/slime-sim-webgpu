@@ -52,14 +52,14 @@ const UNIFORMS_SLIME_SIM = {
     value: 45,
     label: 'SensorAngle',
     min: 5,
-    max: 180,
+    max: 135,
     step: 5,
   },
   rotationAngle: {
     value: 45,
     label: 'RotationAngle',
     min: 5,
-    max: 180,
+    max: 135,
     step: 5,
   },
 

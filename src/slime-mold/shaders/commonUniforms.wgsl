@@ -16,9 +16,6 @@ struct SlimeSimUniformsStruct {
 };
 
 struct ColorizationUniformsStruct {
-  // seems like boolean are not supported when being passed in as gpu buffer
-  // if blurTrail == 0 disabled
-  // else enabled
   blurTrail: f32,
   enableLighting: f32,
   slimeColor: vec3f,

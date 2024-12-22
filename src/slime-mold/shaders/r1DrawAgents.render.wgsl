@@ -1,5 +1,5 @@
 // =============================================================
-// render pass 1 -> vertex shader
+// Draw agents render pass: vertex shader.
 // =============================================================
 @vertex
 fn vertexShader(
@@ -18,7 +18,7 @@ fn vertexShader(
 }
 
 // =============================================================
-// render pass 1 -> fragment shader
+// Draw agents render pass: fragment shader.
 // =============================================================
 @group(0) @binding(0) var<uniform> uSlimeSim: SlimeSimUniformsStruct;
 @group(0) @binding(1) var<uniform> uColorization: ColorizationUniformsStruct;

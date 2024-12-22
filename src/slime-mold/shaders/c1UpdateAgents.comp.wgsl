@@ -1,5 +1,5 @@
 // =============================================================
-// compute pass 1 -> update agents
+// Compute pass 1 -> update agents.
 // =============================================================
 struct Agent {
   position: vec2f,
@@ -27,10 +27,9 @@ fn rotate(direction: vec2f, degrees: f32) -> vec2f {
 }
 
 fn checkTrail(agentPosition: vec2f, newDir: vec2f) -> f32 {
-  let sensorPosition = agentPosition + uSlimeSim.sensorOffset * newDir;
-
   var sum: f32 = 0.0;
   let sensorWidth: i32 = 1;
+  let sensorPosition = agentPosition + uSlimeSim.sensorOffset * newDir;
 
   for (var x = -sensorWidth; x <= sensorWidth; x++) {
     for (var y = -sensorWidth; y <= sensorWidth; y++) {
@@ -55,34 +54,30 @@ fn updateAgents(
 ) {
   let idx = id.x; // Index for the current workgroup invocation
   if (idx < arrayLength(&agentsArray)) {
-    // ===================================
-    // [motor stage]
+    // =============================================================
+    // 1. Motor stage -> update agents position.
     // reference: https://uwe-repository.worktribe.com/output/980579
-    // ===================================
-
-    let agentPosition: vec2f = agentsArray[idx].position;
+    // =============================================================
     let uResolution: vec2f = uSlimeSim.resolution;
-
+    let agentPosition: vec2f = agentsArray[idx].position;
     if (agentPosition.x < 0 || agentPosition.x > uResolution.x) {
       agentsArray[idx].direction.x *= -1.0;
     }
     if (agentPosition.y < 0 || agentPosition.y > uResolution.y) {
       agentsArray[idx].direction.y *= -1.0;
     }
-
-    // in this case, we specifically want to use agents[idx].direction because that
-    // is being changed, where as the local `agent` variable is not
-    // make sure to normalize direction becaues otherwise, some agents move very slow
+    // In this case, we specifically want to use agents[idx].direction because that
+    // is being changed, where as the local `agent` variable is not.
+    // Make sure to normalize direction becaues otherwise, some agents move very slow.
     agentsArray[idx].position = agentPosition + normalize(agentsArray[idx].direction) * uSlimeSim.stepSize;
 
-    // ===================================
-    // [sensory stage]
+    // =============================================================
+    // 2. Sensory stage -> update agents direction based on sensors.
     // reference: https://uwe-repository.worktribe.com/output/980579
-    // ===================================
-    // lets say that abs(maxDegrees) = 145
-    // add degrees to go left, subtract degrees to go right
-    // let uSensorAngle = 5.0;
-    // let uSensorAngle = 22.5;
+    //
+    // Lets say that abs(maxDegrees) = 145
+    // Add degrees to go left, subtract degrees to go right.
+    // =============================================================
     let uSensorAngle = uSlimeSim.sensorAngle;
     let sensorDegreeLeft = uSensorAngle;
     let sensorDegreeRight = -uSensorAngle;
@@ -123,8 +118,8 @@ fn updateAgents(
     }
   }
 
-  var white = vec4f(1.0, 1.0, 1.0, 1.0);
-  var agentCenterPos = vec2i(agentsArray[id.x].position);
+  let white = vec4f(1.0, 1.0, 1.0, 1.0);
+  let agentCenterPos = vec2i(agentsArray[id.x].position);
 
   // Setting radius to decimal, like, 2.5 makes it an f32.
   // Type f32 doesn't allow x++ or y++ which is annoying in for-loops.
