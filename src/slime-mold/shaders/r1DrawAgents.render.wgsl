@@ -42,69 +42,60 @@ fn calculateNormal(uv: vec2f) -> vec3f {
 
 @fragment
 fn fragmentShader(
-  @builtin(position) fragCoord: vec4<f32>
-) -> @location(0) vec4<f32> {
-  // Sample the texture
-  let uv = fragCoord.xy / uSlimeSim.resolution;
-  let texColor = textureLoad(readFromThisTexture, vec2i(uv * uSlimeSim.resolution), 0);
-
-  var scaledUv = (2.0 * fragCoord.xy - uSlimeSim.resolution) / uSlimeSim.resolution.y;
-  let checker = vec2(floor(scaledUv * 8.0));
-  // var gridUv = 2.0 * fract(scaledUv * 2.0) - 1.0;
-  // let dist = smoothstep(0.99, 1.0, max(abs(gridUv.x), abs(gridUv.y)));
-  var myColor = vec3(0.0);
-  if ((checker.x + checker.y) % 2 == 0.0) {
-    myColor += vec3(0.125);
+  @builtin(position) fragCoord:vec4f
+) -> @location(0) vec4f {
+  // =============================================================
+  // Create the checkerboard pattern.
+  // =============================================================
+  let checkerBoardUv = (2.0 * fragCoord.xy - uSlimeSim.resolution.xy) / uSlimeSim.resolution.y;
+  let checkerBoardGridUv = vec2(floor(checkerBoardUv * 8.0));
+  var checkerBoardColor = vec3(0.0);
+  if (floor((checkerBoardGridUv.x + checkerBoardGridUv.y) % 2) == 0) {
+    checkerBoardColor = vec3(0.125);
   } else {
-    myColor += vec3(0.0625);
-  }
-  // myColor += vec3(dist);
-
-  // myColor = vec3(dist);
-  // let checker2 = i32(floor(scaledUv.x * 32.0)) + i32(floor(scaledUv.y * 32.0));
-  // if (checker2 % 2 == 0) {
-  //   myColor *= vec3(0.1);
-  // } else {
-  //   myColor *= vec3(0.5);
-  // }
-
-  if (uColorization.enableLighting == 0.0) {
-    let myRes = mix(myColor, uColorization.slimeColor, texColor.g);
-    return vec4(myRes, 1.0);
+    checkerBoardColor = vec3(0.0625);
   }
 
-  // Normalize the light direction
-  // todo: note that clip space is y down is positive so need to set light source to be
-  // at negative y position to keep it at the top right of the screen
-  // hard code this variable for lighting
+  // =============================================================
+  // Set up uv coords and get texture color at the current coordinate.
+  // =============================================================
+  let uv = fragCoord.xy / uSlimeSim.resolution;
+  let currTextureColor = textureLoad(readFromThisTexture, vec2i(uv * uSlimeSim.resolution), 0);
+
+  // =============================================================
+  // Return early if we disabled lighting.
+  // =============================================================
+  if (uColorization.enableLighting <= 0.0001) {
+    // Mix between the checkerboard color, and slime color based on whether or not
+    // the texture color is set to white. We can check for this using the r, g, or
+    // b channels. Using alpha channel wouldn't make sense because it's always 1.
+    let fragColor = mix(checkerBoardColor, uColorization.slimeColor, currTextureColor.r);
+    return vec4(fragColor, 1.0);
+  }
+
+  // Note that negative values for y moves the light source up. WebGPU has y in
+  // reverse. Setting y = -0.25, will make light appear at the top-right!
   let lightSource = vec3f(0.25, -0.25, -2.0);
-  // var lightSource = fragmentShaderLightingUniforms.position;
   let viewSource = vec3f(0.0, 0.0, -1.0);
   let lightDir = normalize(lightSource);
   let viewDir = normalize(viewSource);
 
-  // Assume a fixed surface normal facing upwards
-  // let surfaceNormal = normalize(vec3<f32>(texColor.rgb));
+  // 32 or 64 seem like good numbers especially with lightSource
+  // at vec3f(0.25, 0.25. -2.0). Higher value = sharper highlights.
+  let shininess = 64.0;
   let surfaceNormal = calculateNormal(fragCoord.xy);
-
-  // // Calculate diffuse lighting using Lambertian reflectance
-  let diffuseIntensity = max(dot(surfaceNormal, lightDir), 0.0);
-
   let reflection = reflect(-lightDir, surfaceNormal);
-  // 32 or 64 seem like good numbers
-  // especially with lightSource = 0.25, 0.25. -2.0
-  let shininess = 64.0; // Higher value = sharper highlights
   let specularIntensity = pow(max(dot(reflection, viewDir), 0.0), shininess);
 
   // Combine texture color with lighting
-  // let litColor = texColor.rgb * lightIntensity;
+  // let litColor = currTextureColor.rgb * lightIntensity;
 
   // Combine results
   let ambientLight = 0.75; // Minimum light intensity
   // lc -> light color
   let lc = vec3f(1.0, 1.0, 1.0);
   let myColorVariable = uColorization.slimeColor;
-  var litColor = myColorVariable * texColor.rgb * ambientLight + lc * specularIntensity;
+  var litColor = myColorVariable * currTextureColor.rgb * ambientLight + lc * specularIntensity;
   // var litColor = vec3f(1.0, 1.0, 1.0) * specularIntensity;
 
   let color: vec4f = textureLoad(readFromThisTexture, vec2i(uv * uSlimeSim.resolution), 0);
@@ -114,7 +105,7 @@ fn fragmentShader(
 
   litColor = pow(litColor, vec3(2.0));
 
-  litColor = mix(myColor, litColor, smoothstep(0.0, 1.0, color.g));
+  litColor = mix(checkerBoardColor, litColor, smoothstep(0.0, 1.0, color.g));
 
   // litColor = litColor * vec4(0.0, 1.0, 0.0, 0.0).g;
   // litColor = mix(litColor, litColor + litColor * 0.25, color.g);
