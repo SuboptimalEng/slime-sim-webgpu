@@ -44,30 +44,7 @@ fn calculateNormal(uv: vec2f) -> vec3f {
 fn fragmentShader(
   @builtin(position) fragCoord: vec4<f32>
 ) -> @location(0) vec4<f32> {
-  // // frag coords are based on canvas size
-  // // textureInput also happens to have the same size as canvas size
-  // // x -> [0, 400]
-  // // y -> [0, 300]
-  // let uv = fragCoord.xy;
-
-  // // can't read texture with floating points, need to cast to int
-  // return textureLoad(textureInput, vec2i(uv), 0);
-
-  // // frag coords are based on canvas size
-  // // textureInput also happens to have the same size as canvas size
-  // // x -> [0, 400]
-  // // y -> [0, 300]
-  // let uv = fragCoord.xy / uSlimeSimSettings.uResolution;
-  // // can't read texture with floating points, need to cast to int
-  // return textureLoad(textureInput, vec2i(uv * uSlimeSimSettings.uResolution), 0);
-
-  // // todo: figure this out
-  // // HOW THE HECK DOES THIS WORK? WHAT AM I MISSING?
-  // let uv = fragCoord.xy / updateAgentsUniforms.uResolution;
-  // return textureLoad(textureInput, vec2i(uv * updateAgentsUniforms.uResolution), 0);
-
-  // // custom lighting
-  // // Sample the texture
+  // Sample the texture
   let uv = fragCoord.xy / uSlimeSimSettings.uResolution;
   let texColor = textureLoad(textureInput, vec2i(uv * uSlimeSimSettings.uResolution), 0);
 
