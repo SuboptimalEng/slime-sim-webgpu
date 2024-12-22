@@ -1,15 +1,20 @@
 import { useEffect } from 'react';
-import { main } from './slime-mold/index-05';
+import { cleanUp, main } from './slime-mold';
 
 function App() {
   useEffect(() => {
     main();
+    return () => {
+      // we need to cancel request animation frame in the old main fn
+      // when refreshing the page to avoid getting WebGPU errors
+      cleanUp();
+    };
   }, []);
 
   return (
-    <div className="absolute w-full h-full bg-gray-900">
+    <div className="absolute w-full h-full bg-black">
       <div className="flex items-center justify-center h-screen place-items-center text-center text-white">
-        <canvas className="w-2/3 aspect-square border-2"></canvas>
+        <canvas></canvas>
       </div>
     </div>
   );
