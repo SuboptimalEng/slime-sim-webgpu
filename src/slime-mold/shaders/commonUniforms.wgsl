@@ -1,4 +1,4 @@
-struct SlimeSimSettingsStruct {
+struct SlimeSimUniformsStruct {
   uResolution: vec2f,
 
   // general
@@ -15,7 +15,7 @@ struct SlimeSimSettingsStruct {
   uDiffuseKernel: f32,
 };
 
-struct ColorizationSettingsStruct {
+struct ColorizationUniformsStruct {
   // seems like boolean are not supported when being passed in as gpu buffer
   // if blurTrail == 0 disabled
   // else enabled

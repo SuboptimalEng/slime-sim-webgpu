@@ -89,7 +89,7 @@ const initializeSlimeSimUniforms = (
   });
 
   // ===================================
-  // Set up gpu buffer(s).
+  // Create gpu buffer(s).
   // ===================================
   // Array of size 8 is too small.
   const uniformsCPU = new Float32Array(10);
@@ -101,7 +101,6 @@ const initializeSlimeSimUniforms = (
       GPUBufferUsage.COPY_SRC |
       GPUBufferUsage.UNIFORM,
   });
-
   resetSlimeSimUniforms(device, canvas, uniformsCPU, uniformsBufferGPU);
 
   // ===================================
@@ -161,7 +160,7 @@ const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
   });
 
   // ===================================
-  // Set up gpu buffer(s).
+  // Create gpu buffer(s).
   // ===================================
   const colorizationUniformsArrayCPU = new Float32Array(12);
   const colorizationUniformsBufferGPU = device.createBuffer({
@@ -172,7 +171,6 @@ const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
       GPUBufferUsage.COPY_SRC |
       GPUBufferUsage.UNIFORM,
   });
-
   resetColorizationUniforms(
     device,
     colorizationUniformsArrayCPU,
@@ -197,6 +195,9 @@ const initializeGPUTextures = (
   device: GPUDevice,
   canvas: HTMLCanvasElement,
 ) => {
+  // ===================================
+  // Create gpu buffer(s).
+  // ===================================
   const gpuTextureForStorage = device.createTexture({
     label: 'create texture A for storage on gpu',
     format: 'rgba8unorm',
@@ -210,7 +211,6 @@ const initializeGPUTextures = (
       GPUTextureUsage.STORAGE_BINDING |
       GPUTextureUsage.TEXTURE_BINDING,
   });
-
   const gpuTextureForRead = device.createTexture({
     label: 'create texture B for read on gpu',
     format: 'rgba8unorm',
@@ -220,7 +220,6 @@ const initializeGPUTextures = (
     },
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
   });
-
   return { gpuTextureForStorage, gpuTextureForRead };
 };
 
@@ -246,7 +245,7 @@ const initializeAgents = (
   });
 
   // ===================================
-  // Set up gpu buffer(s).
+  // Create gpu buffer(s).
   // ===================================
   // todo: Currently, bind groups don't change variables so we initialize agentsBufferGPU
   // to be max size so that numOfAgents slider works as expected. More correct approach
@@ -263,7 +262,6 @@ const initializeAgents = (
       GPUBufferUsage.COPY_SRC |
       GPUBufferUsage.COPY_DST,
   });
-
   resetAgentsBuffer(device, canvas, agentsBufferGPU);
   resetGPUTextures(device, canvas, gpuTextureForStorage, gpuTextureForRead);
 

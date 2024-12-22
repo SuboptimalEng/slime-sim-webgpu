@@ -2,7 +2,7 @@
 // compute pass 2 -> fade agents trail
 // =============================================================
 // @group(0) @binding(0) var<uniform> uSlimeSimSettings: SlimeSimSettingsStruct;
-@group(0) @binding(0) var<uniform> fadeAgentsTrailSettings: SlimeSimSettingsStruct;
+@group(0) @binding(0) var<uniform> fadeAgentsTrailSettings: SlimeSimUniformsStruct;
 @group(0) @binding(1) var readTexture: texture_2d<f32>;
 @group(0) @binding(2) var writeTexture: texture_storage_2d<rgba8unorm, write>;
 

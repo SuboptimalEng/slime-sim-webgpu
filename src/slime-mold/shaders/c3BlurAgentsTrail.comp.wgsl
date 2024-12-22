@@ -3,8 +3,8 @@
 // =============================================================
 // @group(0) @binding(0) var<uniform> canvasSize: vec2u;
 // @group(0) @binding(0) var<uniform> : vec2u;
-@group(0) @binding(0) var<uniform> blurAgentsTrailSlimeSimUniforms: SlimeSimSettingsStruct;
-@group(0) @binding(1) var<uniform> blurAgentsTrailUniforms: ColorizationSettingsStruct;
+@group(0) @binding(0) var<uniform> blurAgentsTrailSlimeSimUniforms: SlimeSimUniformsStruct;
+@group(0) @binding(1) var<uniform> blurAgentsTrailUniforms: ColorizationUniformsStruct;
 @group(0) @binding(2) var readFadeTrailTexture: texture_2d<f32>;
 @group(0) @binding(3) var writeFadeTrailTexture: texture_storage_2d<rgba8unorm, write>;
 

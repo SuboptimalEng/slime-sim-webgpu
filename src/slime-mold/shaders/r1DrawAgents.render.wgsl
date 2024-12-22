@@ -20,8 +20,8 @@ fn vertexShader(
 // =============================================================
 // render pass 1 -> fragment shader
 // =============================================================
-@group(0) @binding(0) var<uniform> uSlimeSimSettings: SlimeSimSettingsStruct;
-@group(0) @binding(1) var<uniform> uColorizationSettings: ColorizationSettingsStruct;
+@group(0) @binding(0) var<uniform> uSlimeSimSettings: SlimeSimUniformsStruct;
+@group(0) @binding(1) var<uniform> uColorizationSettings: ColorizationUniformsStruct;
 @group(0) @binding(2) var textureInput: texture_2d<f32>;
 
 fn calculateNormal(uv: vec2f) -> vec3f {

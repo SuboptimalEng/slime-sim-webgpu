@@ -207,7 +207,6 @@ const main = async () => {
   });
   const fadeAgentsTrailComputePipeline = device.createComputePipeline({
     label: 'fade agents trail: create compute pipeline',
-    // layout: 'auto',
     layout: fadeAgentsTrailComputePipelineLayout,
     compute: {
       entryPoint: 'fadeAgentsTrail',

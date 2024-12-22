@@ -5,8 +5,8 @@ function App() {
   useEffect(() => {
     main();
     return () => {
-      // we need to cancel request animation frame in the old main fn
-      // when refreshing the page to avoid getting WebGPU errors
+      // We need to cancel request animation frame in the old main fn
+      // when refreshing the page to avoid getting WebGPU errors.
       cleanUp();
     };
   }, []);

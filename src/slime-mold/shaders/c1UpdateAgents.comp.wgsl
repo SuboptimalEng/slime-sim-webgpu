@@ -6,7 +6,7 @@ struct Agent {
   direction: vec2f,
 }
 
-@group(0) @binding(0) var<uniform> updateAgentsUniforms: SlimeSimSettingsStruct;
+@group(0) @binding(0) var<uniform> updateAgentsUniforms: SlimeSimUniformsStruct;
 @group(0) @binding(1) var<storage, read_write> agentsArray: array<Agent>;
 @group(0) @binding(2) var inputAgentsTexture: texture_2d<f32>;
 @group(0) @binding(3) var outputAgentsTexture: texture_storage_2d<rgba8unorm, write>;
