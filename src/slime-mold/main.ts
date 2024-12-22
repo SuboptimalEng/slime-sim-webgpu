@@ -76,17 +76,17 @@ const main = async () => {
   // ===================================
   // Create shader modules.
   // ===================================
-  const wgslShaderCode = [
-    commonUniformsWGSL,
-    c1UpdateAgentsWGSL,
-    c2FadeAgentsTrailWGSL,
-    c3BlurAgentsTrailWGSL,
-    r1DrawAgentsWGSL,
-  ].join('');
-  const shaderModule = device.createShaderModule({
-    label: 'create shader module',
-    code: wgslShaderCode,
-  });
+  // const wgslShaderCode = [
+  //   commonUniformsWGSL,
+  //   c1UpdateAgentsWGSL,
+  //   c2FadeAgentsTrailWGSL,
+  //   c3BlurAgentsTrailWGSL,
+  //   r1DrawAgentsWGSL,
+  // ].join('');
+  // const shaderModule = device.createShaderModule({
+  //   label: 'create shader module',
+  //   code: wgslShaderCode,
+  // });
 
   // ===================================
   // Set up the updateAgents compute pass.
@@ -94,6 +94,11 @@ const main = async () => {
   // This pass updates the position + direction of each agent.
   // It also draws the result onto a texture.
   // ===================================
+  const updateAgentsWGSL = [commonUniformsWGSL, c1UpdateAgentsWGSL].join('');
+  const updateAgentsShaderModule = device.createShaderModule({
+    label: 'update agents: create shader module',
+    code: updateAgentsWGSL,
+  });
   const updateAgentsComputeBindGroupLayout = device.createBindGroupLayout({
     label: 'update agents: create compute bind group layout',
     entries: [
@@ -137,8 +142,8 @@ const main = async () => {
     label: 'update agents: create compute pipeline',
     layout: updateAgentsComputePipelineLayout,
     compute: {
-      module: shaderModule,
       entryPoint: 'updateAgents',
+      module: updateAgentsShaderModule,
     },
   });
   const updateAgentsComputeBindGroup = device.createBindGroup({
@@ -171,6 +176,13 @@ const main = async () => {
   // ===================================
   // Set up fadeAgentsTrail compute pass.
   // ===================================
+  const fadeAgentsTrailWGSL = [commonUniformsWGSL, c2FadeAgentsTrailWGSL].join(
+    '',
+  );
+  const fadeAgentsTrailShaderModule = device.createShaderModule({
+    label: 'fade agents trail: create shader module',
+    code: fadeAgentsTrailWGSL,
+  });
   const fadeAgentsTrailComputeBindGroupLayout = device.createBindGroupLayout({
     label: 'fade agents trail: create bind group layout',
     entries: [
@@ -208,7 +220,7 @@ const main = async () => {
     layout: fadeAgentsTrailComputePipelineLayout,
     compute: {
       entryPoint: 'fadeAgentsTrail',
-      module: shaderModule,
+      module: fadeAgentsTrailShaderModule,
     },
   });
   const fadeAgentsTrailBindGroup = device.createBindGroup({
@@ -234,8 +246,14 @@ const main = async () => {
   });
 
   // ===================================
-  // blur agents trail compute pass
+  // Blur agents trail compute pass.
   // ===================================
+  // prettier-ignore
+  const blurAgentsTrailWGSL = [commonUniformsWGSL, c3BlurAgentsTrailWGSL].join('');
+  const blurAgentsTrailShaderModule = device.createShaderModule({
+    label: 'blur agents trail: create shader module',
+    code: blurAgentsTrailWGSL,
+  });
   const blurAgentsTrailComputeBindGroupLayout = device.createBindGroupLayout({
     label: 'blur agents trail: create bindgroup layout',
     entries: [
@@ -280,7 +298,7 @@ const main = async () => {
     layout: blurAgentsTrailPipelineLayout,
     compute: {
       entryPoint: 'blurAgentsTrail',
-      module: shaderModule,
+      module: blurAgentsTrailShaderModule,
     },
   });
   const blurAgentsTrailBindGroup = device.createBindGroup({
@@ -310,8 +328,16 @@ const main = async () => {
     ],
   });
 
-  const renderBindGroupLayout = device.createBindGroupLayout({
-    label: 'create render bind group layout',
+  // ===================================
+  // Draw agents render pass.
+  // ===================================
+  const drawAgentsWGSL = [commonUniformsWGSL, r1DrawAgentsWGSL].join('');
+  const drawAgentsShaderModule = device.createShaderModule({
+    label: 'draw agents: create shader module',
+    code: drawAgentsWGSL,
+  });
+  const drawAgentsBindGroupLayout = device.createBindGroupLayout({
+    label: 'draw agents: create bind group layout',
     entries: [
       {
         binding: 0,
@@ -336,18 +362,18 @@ const main = async () => {
       },
     ],
   });
-  const renderPipeline = device.createRenderPipeline({
-    label: 'create render pipeline',
+  const drawAgentsRenderPipeline = device.createRenderPipeline({
+    label: 'draw agents: create render pipeline',
     layout: device.createPipelineLayout({
-      bindGroupLayouts: [renderBindGroupLayout],
+      bindGroupLayouts: [drawAgentsBindGroupLayout],
     }),
     vertex: {
-      module: shaderModule,
       entryPoint: 'vertexShader',
+      module: drawAgentsShaderModule,
     },
     fragment: {
-      module: shaderModule,
       entryPoint: 'fragmentShader',
+      module: drawAgentsShaderModule,
       targets: [
         {
           format: canvasFormat,
@@ -358,9 +384,9 @@ const main = async () => {
       topology: 'triangle-list',
     },
   });
-  const renderBindGroup = device.createBindGroup({
-    label: 'create render bind group',
-    layout: renderBindGroupLayout,
+  const drawAgentsBindGroup = device.createBindGroup({
+    label: 'draw agents: create bind group',
+    layout: drawAgentsBindGroupLayout,
     entries: [
       {
         binding: 0,
@@ -413,7 +439,7 @@ const main = async () => {
     fadeAgentsTrailComputePass.dispatchWorkgroups(canvas.width, canvas.height);
     fadeAgentsTrailComputePass.end();
 
-    // copy fading trail to texture B once again
+    // copy fading trail from storage -> read texture
     encoder.copyTextureToTexture(
       { texture: gpuTextureForStorage }, // Source
       { texture: gpuTextureForRead }, // Destination
@@ -439,8 +465,8 @@ const main = async () => {
       [canvas.width, canvas.height, 1], // Size (width, height, depthOrArrayLayers)
     );
 
-    // 4. render pass -> draw resulting texture to canvas
-    const renderPass = encoder.beginRenderPass({
+    // 4. render pass -> draw agents on canvas
+    const drawAgentsRenderPass = encoder.beginRenderPass({
       colorAttachments: [
         {
           view: context.getCurrentTexture().createView(),
@@ -450,10 +476,10 @@ const main = async () => {
         },
       ],
     });
-    renderPass.setPipeline(renderPipeline);
-    renderPass.setBindGroup(0, renderBindGroup);
-    renderPass.draw(6);
-    renderPass.end();
+    drawAgentsRenderPass.setPipeline(drawAgentsRenderPipeline);
+    drawAgentsRenderPass.setBindGroup(0, drawAgentsBindGroup);
+    drawAgentsRenderPass.draw(6);
+    drawAgentsRenderPass.end();
 
     device.queue.submit([encoder.finish()]);
 
