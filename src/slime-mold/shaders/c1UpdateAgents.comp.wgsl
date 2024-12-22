@@ -27,7 +27,7 @@ fn rotate(direction: vec2f, degrees: f32) -> vec2f {
 }
 
 fn checkTrail(agentPosition: vec2f, newDir: vec2f) -> f32 {
-  let sensorPosition = agentPosition + uSlimeSim.uSensorOffset * newDir;
+  let sensorPosition = agentPosition + uSlimeSim.sensorOffset * newDir;
 
   var sum: f32 = 0.0;
   let sensorWidth: i32 = 1;
@@ -61,7 +61,7 @@ fn updateAgents(
     // ===================================
 
     let agentPosition: vec2f = agentsArray[idx].position;
-    let uResolution: vec2f = uSlimeSim.uResolution;
+    let uResolution: vec2f = uSlimeSim.resolution;
 
     if (agentPosition.x < 0 || agentPosition.x > uResolution.x) {
       agentsArray[idx].direction.x *= -1.0;
@@ -73,7 +73,7 @@ fn updateAgents(
     // in this case, we specifically want to use agents[idx].direction because that
     // is being changed, where as the local `agent` variable is not
     // make sure to normalize direction becaues otherwise, some agents move very slow
-    agentsArray[idx].position = agentPosition + normalize(agentsArray[idx].direction) * uSlimeSim.uStepSize;
+    agentsArray[idx].position = agentPosition + normalize(agentsArray[idx].direction) * uSlimeSim.stepSize;
 
     // ===================================
     // [sensory stage]
@@ -83,7 +83,7 @@ fn updateAgents(
     // add degrees to go left, subtract degrees to go right
     // let uSensorAngle = 5.0;
     // let uSensorAngle = 22.5;
-    let uSensorAngle = uSlimeSim.uSensorAngle;
+    let uSensorAngle = uSlimeSim.sensorAngle;
     let sensorDegreeLeft = uSensorAngle;
     let sensorDegreeRight = -uSensorAngle;
 
@@ -97,7 +97,7 @@ fn updateAgents(
 
     // // lets say that abs(maxDegrees) = 145
     // // add degrees to go left, subtract degrees to go right
-    let uRotationAngle = uSlimeSim.uRotationAngle;
+    let uRotationAngle = uSlimeSim.rotationAngle;
     let rotationDegreeLeft = uRotationAngle;
     let rotationDegreeRight = -uRotationAngle;
 
@@ -131,7 +131,7 @@ fn updateAgents(
   // But type f32 can be useful if we want to make a circular agent with
   // a smaller radius since we can perform checks by incrementing 0.5
   // units in the for-loop.
-  let uRadius = uSlimeSim.uRadius;
+  let uRadius = uSlimeSim.radius;
   for (var x = -uRadius; x <= uRadius; x += 0.5) {
     for (var y = -uRadius; y <= uRadius; y += 0.5) {
       let offset = vec2f(x, y);

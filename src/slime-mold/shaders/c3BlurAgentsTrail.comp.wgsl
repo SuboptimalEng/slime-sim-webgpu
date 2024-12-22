@@ -22,7 +22,7 @@ fn blurAgentsTrail(
   // todo: see if using this is useful for gradient colors
   var diffuseKernel = i32(uColorization.blurTrail);
 
-  let canvasSize = uSlimeSim.uResolution;
+  let canvasSize = uSlimeSim.resolution;
   if (id.x >= u32(canvasSize.x) || id.y >= u32(canvasSize.y)) {
     // if (id.x >= 300 || id.y >= 300) {
     return; // Avoid out-of-bounds access

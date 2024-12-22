@@ -45,10 +45,10 @@ fn fragmentShader(
   @builtin(position) fragCoord: vec4<f32>
 ) -> @location(0) vec4<f32> {
   // Sample the texture
-  let uv = fragCoord.xy / uSlimeSim.uResolution;
-  let texColor = textureLoad(textureInput, vec2i(uv * uSlimeSim.uResolution), 0);
+  let uv = fragCoord.xy / uSlimeSim.resolution;
+  let texColor = textureLoad(textureInput, vec2i(uv * uSlimeSim.resolution), 0);
 
-  var scaledUv = (2.0 * fragCoord.xy - uSlimeSim.uResolution) / uSlimeSim.uResolution.y;
+  var scaledUv = (2.0 * fragCoord.xy - uSlimeSim.resolution) / uSlimeSim.resolution.y;
   let checker = vec2(floor(scaledUv * 8.0));
   // var gridUv = 2.0 * fract(scaledUv * 2.0) - 1.0;
   // let dist = smoothstep(0.99, 1.0, max(abs(gridUv.x), abs(gridUv.y)));
@@ -107,7 +107,7 @@ fn fragmentShader(
   var litColor = myColorVariable * texColor.rgb * ambientLight + lc * specularIntensity;
   // var litColor = vec3f(1.0, 1.0, 1.0) * specularIntensity;
 
-  let color: vec4f = textureLoad(textureInput, vec2i(uv * uSlimeSim.uResolution), 0);
+  let color: vec4f = textureLoad(textureInput, vec2i(uv * uSlimeSim.resolution), 0);
 
   // litColor = mix(surfaceNormal + vec3(0.0, 0.0, 1.0), litColor , smoothstep(0.9, 1.0, color.g));
   // litColor = (surfaceNormal + vec3(0.0, 0.0, 1.0)) + litColor;

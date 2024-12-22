@@ -12,6 +12,6 @@ fn fadeAgentsTrail(
   @builtin(global_invocation_id) id: vec3u,
 ) {
   let currTextureColor = textureLoad(readTexture, id.xy, 0).rgb;
-  let newTextureColor = currTextureColor - uSlimeSim.uDecayT;
+  let newTextureColor = currTextureColor - uSlimeSim.decayT;
   textureStore(writeTexture, id.xy, vec4f(newTextureColor, 1.0));
 }

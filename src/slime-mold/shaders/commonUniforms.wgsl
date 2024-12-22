@@ -1,18 +1,18 @@
 struct SlimeSimUniformsStruct {
-  uResolution: vec2f,
+  resolution: vec2f,
 
   // general
-  uRadius: f32,
-  uStepSize: f32,
-  uDecayT: f32,
+  radius: f32,
+  stepSize: f32,
+  decayT: f32,
 
   // sensor
-  uSensorOffset: f32,
-  uSensorAngle: f32,
-  uRotationAngle: f32,
+  sensorOffset: f32,
+  sensorAngle: f32,
+  rotationAngle: f32,
 
   // other
-  uDiffuseKernel: f32,
+  diffuseKernel: f32,
 };
 
 struct ColorizationUniformsStruct {
