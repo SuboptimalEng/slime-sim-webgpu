@@ -45,6 +45,7 @@ const initializeWebGPU = async () => {
   if (!context) {
     throw new Error('Cannot recieve WebGPU context from canvas.');
   }
+
   context.configure({
     device: device,
     format: canvasFormat,
@@ -58,6 +59,9 @@ const initializeSlimeSimUniforms = (
   canvas: HTMLCanvasElement,
   pane: Pane,
 ): GPUBuffer => {
+  // ===================================
+  // Set up tweakpane settings.
+  // ===================================
   const generalFolder = pane.addFolder({ title: 'General' });
   generalFolder.addBinding(UNIFORMS_SLIME_SIM.radius, 'value', {
     ...UNIFORMS_SLIME_SIM.radius,
@@ -83,7 +87,32 @@ const initializeSlimeSimUniforms = (
   const randomizeAgentSettingsButton = agentFolder.addButton({
     title: 'Randomize Agent Settings',
   });
+
+  // ===================================
+  // Set up gpu buffer(s).
+  // ===================================
+  // Array of size 8 is too small.
+  const uniformsCPU = new Float32Array(10);
+  const uniformsBufferGPU = device.createBuffer({
+    label: 'create uniforms buffer for gpu',
+    size: uniformsCPU.byteLength,
+    usage:
+      GPUBufferUsage.COPY_DST |
+      GPUBufferUsage.COPY_SRC |
+      GPUBufferUsage.UNIFORM,
+  });
+
+  resetSlimeSimUniforms(device, canvas, uniformsCPU, uniformsBufferGPU);
+
+  // ===================================
+  // Add tweakpane handlers.
+  // ===================================
+  pane.on('change', (e) => {
+    resetSlimeSimUniforms(device, canvas, uniformsCPU, uniformsBufferGPU);
+    console.log('pane changed!');
+  });
   randomizeAgentSettingsButton.on('click', (e) => {
+    console.log('randomize agents clicked!');
     const getRandomValue = (min: number, max: number, step: number) => {
       const range = (max - min) / step;
       const randomStep = Math.floor(Math.random() * (range + 1));
@@ -113,28 +142,13 @@ const initializeSlimeSimUniforms = (
     pane.refresh();
   });
 
-  // array of size 8 is too small
-  const uniformsCPU = new Float32Array(10);
-  const uniformsBufferGPU = device.createBuffer({
-    label: 'create uniforms buffer for gpu',
-    size: uniformsCPU.byteLength,
-    usage:
-      GPUBufferUsage.COPY_DST |
-      GPUBufferUsage.COPY_SRC |
-      GPUBufferUsage.UNIFORM,
-  });
-
-  resetSlimeSimUniforms(device, canvas, uniformsCPU, uniformsBufferGPU);
-  pane.on('change', (e) => {
-    // todo: uniformsCPU, and uniformsBufferGPU work if I place them before defining them. how?
-    resetSlimeSimUniforms(device, canvas, uniformsCPU, uniformsBufferGPU);
-    console.log('pane change!!!');
-  });
-
   return uniformsBufferGPU;
 };
 
 const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
+  // ===================================
+  // Set up tweakpane settings.
+  // ===================================
   const colorizationFolder = pane.addFolder({ title: 'Colorization' });
   colorizationFolder.addBinding(UNIFORMS_COLORIZATION.blurTrail, 'value', {
     ...UNIFORMS_COLORIZATION.blurTrail,
@@ -146,6 +160,9 @@ const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
     ...UNIFORMS_COLORIZATION.slimeColor,
   });
 
+  // ===================================
+  // Set up gpu buffer(s).
+  // ===================================
   const colorizationUniformsArrayCPU = new Float32Array(12);
   const colorizationUniformsBufferGPU = device.createBuffer({
     label: 'colorization uniforms buffer',
@@ -161,6 +178,10 @@ const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
     colorizationUniformsArrayCPU,
     colorizationUniformsBufferGPU,
   );
+
+  // ===================================
+  // Add tweakpane handlers.
+  // ===================================
   colorizationFolder.on('change', (e) => {
     resetColorizationUniforms(
       device,
@@ -210,6 +231,9 @@ const initializeAgents = (
   gpuTextureForStorage: GPUTexture,
   gpuTextureForRead: GPUTexture,
 ) => {
+  // ===================================
+  // Set up tweakpane settings.
+  // ===================================
   const simulationFolder = pane.addFolder({ title: 'Simulation' });
   simulationFolder.addBinding(UNIFORMS_SLIME_SIM.numOfAgents, 'value', {
     ...UNIFORMS_SLIME_SIM.numOfAgents,
@@ -221,12 +245,14 @@ const initializeAgents = (
     title: 'Download Image',
   });
 
+  // ===================================
+  // Set up gpu buffer(s).
+  // ===================================
   // todo: Currently, bind groups don't change variables so we initialize agentsBufferGPU
   // to be max size so that numOfAgents slider works as expected. More correct approach
   // could be to re-create bindgroups with agentsBufferGPU whenever it changes.
   // this will not incur performance hit because compute pass runs with SLIME_MOLD_UNIFORMS.numOfAgents
   // even if this gpu array is large, we won't use it for most calculations when numOfAgents is small
-  // const maxAgentsArraySize = SLIME_MOLD_UNIFORMS.numOfAgents.max * 2;
   const maxAgentsArraySize = UNIFORMS_SLIME_SIM.numOfAgents.max * 4;
   const fakeArrayCPU = new Float32Array(maxAgentsArraySize);
   const agentsBufferGPU = device.createBuffer({
@@ -241,6 +267,9 @@ const initializeAgents = (
   resetAgentsBuffer(device, canvas, agentsBufferGPU);
   resetGPUTextures(device, canvas, gpuTextureForStorage, gpuTextureForRead);
 
+  // ===================================
+  // Add tweakpane handlers.
+  // ===================================
   simulationFolder.on('change', (e) => {
     resetAgentsBuffer(device, canvas, agentsBufferGPU);
     resetGPUTextures(device, canvas, gpuTextureForStorage, gpuTextureForRead);

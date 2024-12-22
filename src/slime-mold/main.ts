@@ -14,7 +14,7 @@ import {
 } from './initializeFunctions';
 
 // ===================================
-// initialize tweak pane
+// Initialize tweak pane.
 // ===================================
 let initializedPane: Pane = new Pane();
 let rafId: number = 0;
