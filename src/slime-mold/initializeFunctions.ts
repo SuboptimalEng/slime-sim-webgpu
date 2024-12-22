@@ -2,9 +2,9 @@ import { Pane } from 'tweakpane';
 import { UNIFORMS_COLORIZATION, UNIFORMS_SLIME_SIM } from './uniforms';
 import {
   resetAgentsBuffer,
-  resetColorizationUniforms,
+  resetColorizationUniformsBuffer,
   resetGPUTextures,
-  resetSlimeSimUniforms,
+  resetSlimeSimUniformsBuffer,
 } from './initializeHelpers';
 
 const initializeWebGPU = async () => {
@@ -101,13 +101,13 @@ const initializeSlimeSimUniforms = (
       GPUBufferUsage.COPY_SRC |
       GPUBufferUsage.UNIFORM,
   });
-  resetSlimeSimUniforms(device, canvas, uniformsCPU, uniformsBufferGPU);
+  resetSlimeSimUniformsBuffer(device, canvas, uniformsCPU, uniformsBufferGPU);
 
   // ===================================
   // Add tweakpane handlers.
   // ===================================
   pane.on('change', (e) => {
-    resetSlimeSimUniforms(device, canvas, uniformsCPU, uniformsBufferGPU);
+    resetSlimeSimUniformsBuffer(device, canvas, uniformsCPU, uniformsBufferGPU);
     console.log('pane changed!');
   });
   randomizeAgentSettingsButton.on('click', (e) => {
@@ -171,7 +171,7 @@ const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
       GPUBufferUsage.COPY_SRC |
       GPUBufferUsage.UNIFORM,
   });
-  resetColorizationUniforms(
+  resetColorizationUniformsBuffer(
     device,
     colorizationUniformsArrayCPU,
     colorizationUniformsBufferGPU,
@@ -181,7 +181,7 @@ const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
   // Add tweakpane handlers.
   // ===================================
   colorizationFolder.on('change', (e) => {
-    resetColorizationUniforms(
+    resetColorizationUniformsBuffer(
       device,
       colorizationUniformsArrayCPU,
       colorizationUniformsBufferGPU,

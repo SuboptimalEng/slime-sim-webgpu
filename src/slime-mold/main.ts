@@ -74,21 +74,6 @@ const main = async () => {
   );
 
   // ===================================
-  // Create shader modules.
-  // ===================================
-  // const wgslShaderCode = [
-  //   commonUniformsWGSL,
-  //   c1UpdateAgentsWGSL,
-  //   c2FadeAgentsTrailWGSL,
-  //   c3BlurAgentsTrailWGSL,
-  //   r1DrawAgentsWGSL,
-  // ].join('');
-  // const shaderModule = device.createShaderModule({
-  //   label: 'create shader module',
-  //   code: wgslShaderCode,
-  // });
-
-  // ===================================
   // Set up the updateAgents compute pass.
   //
   // This pass updates the position + direction of each agent.

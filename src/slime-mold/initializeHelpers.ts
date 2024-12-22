@@ -31,7 +31,7 @@ const resetAgentsBuffer = (
   return agentsBufferGPU;
 };
 
-const resetSlimeSimUniforms = (
+const resetSlimeSimUniformsBuffer = (
   device: GPUDevice,
   canvas: HTMLCanvasElement,
   uniformsCPU: Float32Array,
@@ -55,7 +55,7 @@ const resetSlimeSimUniforms = (
   return uniformsBufferGPU;
 };
 
-const resetColorizationUniforms = (
+const resetColorizationUniformsBuffer = (
   device: GPUDevice,
   colorizationUniformsCPU: Float32Array,
   colorizationUniformsBufferGPU: GPUBuffer,
@@ -124,8 +124,8 @@ const resetGPUTextures = (
 };
 
 export {
-  resetSlimeSimUniforms,
-  resetColorizationUniforms,
   resetAgentsBuffer,
+  resetColorizationUniformsBuffer,
   resetGPUTextures,
+  resetSlimeSimUniformsBuffer,
 };
