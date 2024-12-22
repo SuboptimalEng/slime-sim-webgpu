@@ -103,8 +103,8 @@ fn updateAgents(
     if (F > FL && F > FR) {
       // do nothing
     } else if (F < FL && F < FR) {
-      let zeroOrOne = hashTo01(u32(F + FR + FL));
-      if (f32(zeroOrOne) < 0.1) {
+      let zeroOrOne = f32(hashTo01(u32(F + FR + FL)));
+      if (zeroOrOne < 0.1) {
         agentsArray[idx].direction = rotationLeftDir;
       } else {
         agentsArray[idx].direction = rotationRightDir;
@@ -118,6 +118,9 @@ fn updateAgents(
     }
   }
 
+  // =============================================================
+  // 3. Draw white dot with uSlimeSim.radius on texture.
+  // =============================================================
   let white = vec4f(1.0, 1.0, 1.0, 1.0);
   let agentCenterPos = vec2i(agentsArray[id.x].position);
 
@@ -127,18 +130,16 @@ fn updateAgents(
   // a smaller radius since we can perform checks by incrementing 0.5
   // units in the for-loop.
   let uRadius = uSlimeSim.radius;
+  let rSquared = uRadius * uRadius;
   for (var x = -uRadius; x <= uRadius; x += 0.5) {
     for (var y = -uRadius; y <= uRadius; y += 0.5) {
       let offset = vec2f(x, y);
-      // todo: is this still working? why are we getting squares instead of circles
-      // note: this is working as expected, set uRadius -> 2.5 to see circular agents
       let offsetDotProduct = dot(offset, offset);
-      let rSquared = uRadius * uRadius;
       if (offsetDotProduct < rSquared) {
-        // We need to case offset to i32 since textureStore takes vec2i.
+        // We need to cast offset to i32 since textureStore takes vec2i.
         // agentCenterPos has already been cast during initialization.
-        let pixelCoordToColor = agentCenterPos + vec2i(offset);
-        textureStore(writeToThisTexture, pixelCoordToColor, white);
+        let texelCoordToColorize = agentCenterPos + vec2i(offset);
+        textureStore(writeToThisTexture, texelCoordToColorize, white);
       }
     }
   }

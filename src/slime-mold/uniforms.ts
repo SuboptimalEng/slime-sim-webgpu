@@ -36,7 +36,7 @@ const UNIFORMS_SLIME_SIM = {
     value: 0.005,
     label: 'TrailDecay',
     min: 0.005,
-    max: 0.02,
+    max: 0.025,
     step: 0.005,
   },
 
