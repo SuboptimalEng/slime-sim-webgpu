@@ -1,4 +1,4 @@
-# 🐌 Slime Mold Sim WebGPU + TypeScript
+# 🦠 Slime Mold Sim WebGPU + TypeScript
 
 Recreating Sebastian Lague's slime mold simulation on the web with WebGPU and TypeScript.
 
