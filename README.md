@@ -13,6 +13,11 @@ npm install
 npm run dev
 ```
 
+<img src="/_screenshots/slime-mold-01.png">
+<img src="/_screenshots/slime-mold-02.png">
+<img src="/_screenshots/slime-mold-03.png">
+<img src="/_screenshots/slime-mold-04.png">
+
 ## Resources
 
 #### WebGPU
