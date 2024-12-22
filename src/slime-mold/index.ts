@@ -1,9 +1,9 @@
 import { Pane } from 'tweakpane';
 import commonUniformsWGSL from './shaders/commonUniforms.wgsl?raw';
-import slimeMoldShaderWGSL from './shaders/slimeMoldShader.wgsl?raw';
-import c1UpdateAgentsWGSL from './shaders/c1_updateAgents.comp.wgsl?raw';
-import c2FadeAgentsTrailWGSL from './shaders/c2_fadeAgentsTrail.comp.wgsl?raw';
-import c3BlurAgentsTrailWGSL from './shaders/c3_blurAgentsTrail.comp.wgsl?raw';
+import c1UpdateAgentsWGSL from './shaders/c1UpdateAgents.comp.wgsl?raw';
+import c2FadeAgentsTrailWGSL from './shaders/c2FadeAgentsTrail.comp.wgsl?raw';
+import c3BlurAgentsTrailWGSL from './shaders/c3BlurAgentsTrail.comp.wgsl?raw';
+import r1DrawAgentsWGSL from './shaders/r1DrawAgents.render.wgsl?raw';
 import { UNIFORMS_COLORIZATION, UNIFORMS_SLIME_SIM } from './uniforms';
 
 const createAndBindCanvasSizeUniforms = (
@@ -450,7 +450,7 @@ const main = async () => {
     c1UpdateAgentsWGSL,
     c2FadeAgentsTrailWGSL,
     c3BlurAgentsTrailWGSL,
-    slimeMoldShaderWGSL,
+    r1DrawAgentsWGSL,
   ].join('');
   const shaderModule = device.createShaderModule({
     label: 'create shader module',

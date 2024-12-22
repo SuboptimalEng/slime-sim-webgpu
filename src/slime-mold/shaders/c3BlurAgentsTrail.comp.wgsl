@@ -1,8 +1,8 @@
 // =============================================================
-// blur agents trail
+// compute pass 3 -> blur agents trail
 // =============================================================
 @group(0) @binding(0) var<uniform> canvasSize: vec2<u32>;
-@group(0) @binding(1) var<uniform> blurAgentsTrailUniforms: ColorUniformsStruct;
+@group(0) @binding(1) var<uniform> blurAgentsTrailUniforms: ColorizationSettingsStruct;
 @group(0) @binding(2) var readFadeTrailTexture: texture_2d<f32>;
 @group(0) @binding(3) var writeFadeTrailTexture: texture_storage_2d<rgba8unorm, write>;
 
@@ -21,8 +21,8 @@ fn blurAgentsTrail(
   var diffuseKernel = i32(blurAgentsTrailUniforms.blurTrail);
 
   if (id.x >= canvasSize.x || id.y >= canvasSize.y) {
-  // if (id.x >= 300 || id.y >= 300) {
-      return; // Avoid out-of-bounds access
+    // if (id.x >= 300 || id.y >= 300) {
+    return; // Avoid out-of-bounds access
   }
 
   if (diffuseKernel > 0) {

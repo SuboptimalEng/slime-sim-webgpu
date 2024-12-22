@@ -1,7 +1,7 @@
 // =============================================================
-// fade agents trail
+// compute pass 2 -> fade agents trail
 // =============================================================
-@group(0) @binding(0) var<uniform> fadeAgentsTrailUniforms: UniformsStruct;
+@group(0) @binding(0) var<uniform> fadeAgentsTrailUniforms: SlimeSimSettingsStruct;
 @group(0) @binding(1) var readTexture: texture_2d<f32>;
 @group(0) @binding(2) var writeTexture: texture_storage_2d<rgba8unorm, write>;
 
@@ -10,7 +10,7 @@
 fn fadeAgentsTrail(
   @builtin(global_invocation_id) id: vec3u,
 ) {
-  var currTexColor = textureLoad(readTexture, id.xy, 0).rgb;
-  currTexColor = currTexColor - fadeAgentsTrailUniforms.uDecayT;
-  textureStore(writeTexture, id.xy, vec4f(currTexColor, 1.0));
+  let currTextureColor = textureLoad(readTexture, id.xy, 0).rgb;
+  let newTextureColor = currTextureColor - fadeAgentsTrailUniforms.uDecayT;
+  textureStore(writeTexture, id.xy, vec4f(newTextureColor, 1.0));
 }
