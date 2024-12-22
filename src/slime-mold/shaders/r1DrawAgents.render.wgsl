@@ -61,6 +61,8 @@ fn fragmentShader(
   // =============================================================
   let uv = fragCoord.xy / uSlimeSim.resolution;
   let currTextureColor = textureLoad(readFromThisTexture, vec2i(uv * uSlimeSim.resolution), 0);
+  let uSlimeColor = uColorization.slimeColor;
+  var fragColor = vec3f(0.0);
 
   // =============================================================
   // Return early if we disabled lighting.
@@ -69,12 +71,16 @@ fn fragmentShader(
     // Mix between the checkerboard color, and slime color based on whether or not
     // the texture color is set to white. We can check for this using the r, g, or
     // b channels. Using alpha channel wouldn't make sense because it's always 1.
-    let fragColor = mix(checkerBoardColor, uColorization.slimeColor, currTextureColor.r);
+    fragColor = mix(checkerBoardColor, uSlimeColor, currTextureColor.r);
     return vec4(fragColor, 1.0);
   }
 
+  // =============================================================
+  // Calculate lighting and stylize the result.
+  //
   // Note that negative values for y moves the light source up. WebGPU has y in
   // reverse. Setting y = -0.25, will make light appear at the top-right!
+  // =============================================================
   let lightSource = vec3f(0.25, -0.25, -2.0);
   let viewSource = vec3f(0.0, 0.0, -1.0);
   let lightDir = normalize(lightSource);
@@ -87,30 +93,27 @@ fn fragmentShader(
   let reflection = reflect(-lightDir, surfaceNormal);
   let specularIntensity = pow(max(dot(reflection, viewDir), 0.0), shininess);
 
-  // Combine texture color with lighting
-  // let litColor = currTextureColor.rgb * lightIntensity;
+  // Setting the baseColorIntensity to 0.8, ensures that specular highlights are
+  // more easily visible. Setting it to 1.0 would make the specular highlights
+  // harder to notice.
+  let baseColorIntensity = 0.8;
+  let lightColor = vec3f(1.0, 1.0, 1.0);
+  let baseColor = uSlimeColor * currTextureColor.rgb * baseColorIntensity;
+  let specularColor = lightColor * specularIntensity;
 
-  // Combine results
-  let ambientLight = 0.75; // Minimum light intensity
-  // lc -> light color
-  let lc = vec3f(1.0, 1.0, 1.0);
-  let myColorVariable = uColorization.slimeColor;
-  var litColor = myColorVariable * currTextureColor.rgb * ambientLight + lc * specularIntensity;
-  // var litColor = vec3f(1.0, 1.0, 1.0) * specularIntensity;
-
+  fragColor = baseColor + specularColor;
   let color: vec4f = textureLoad(readFromThisTexture, vec2i(uv * uSlimeSim.resolution), 0);
 
   // litColor = mix(surfaceNormal + vec3(0.0, 0.0, 1.0), litColor , smoothstep(0.9, 1.0, color.g));
   // litColor = (surfaceNormal + vec3(0.0, 0.0, 1.0)) + litColor;
 
-  litColor = pow(litColor, vec3(2.0));
-
-  litColor = mix(checkerBoardColor, litColor, smoothstep(0.0, 1.0, color.g));
+  fragColor = pow(fragColor, vec3(2.0));
+  fragColor = mix(checkerBoardColor, fragColor, smoothstep(0.0, 1.0, color.g));
 
   // litColor = litColor * vec4(0.0, 1.0, 0.0, 0.0).g;
   // litColor = mix(litColor, litColor + litColor * 0.25, color.g);
   // litColor *= vec3(0.22, 1.0, 0.08);
   // litColor = pow(litColor, vec3(2.));
 
-  return vec4f(litColor, 1.0);
+  return vec4f(fragColor, 1.0);
 }
