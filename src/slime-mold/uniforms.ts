@@ -46,20 +46,20 @@ const UNIFORMS_SLIME_SIM = {
     label: 'SensorOffset',
     min: 0,
     max: 20,
-    step: 4,
+    step: 2,
   },
   sensorAngle: {
     value: 45,
     label: 'SensorAngle',
     min: 5,
-    max: 135,
+    max: 180,
     step: 5,
   },
   rotationAngle: {
     value: 45,
     label: 'RotationAngle',
     min: 5,
-    max: 135,
+    max: 180,
     step: 5,
   },
 
