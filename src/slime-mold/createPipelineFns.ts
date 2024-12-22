@@ -262,8 +262,94 @@ const createBlurAgentsTrailComputePipeline = (
   return { blurAgentsTrailPipeline, blurAgentsTrailBindGroup };
 };
 
+const createDrawAgentsRenderPipeline = (
+  device: GPUDevice,
+  canvasFormat: GPUTextureFormat,
+  slimeSimUniformsBufferGPU: GPUBuffer,
+  colorizationUniformsBufferGPU: GPUBuffer,
+  gpuTextureForReadView: GPUTextureView,
+) => {
+  const drawAgentsWGSL = [commonUniformsWGSL, r1DrawAgentsWGSL].join('');
+  const drawAgentsShaderModule = device.createShaderModule({
+    label: 'draw agents: create shader module',
+    code: drawAgentsWGSL,
+  });
+  const drawAgentsBindGroupLayout = device.createBindGroupLayout({
+    label: 'draw agents: create bind group layout',
+    entries: [
+      {
+        binding: 0,
+        visibility: GPUShaderStage.FRAGMENT,
+        buffer: {
+          type: 'uniform',
+        },
+      },
+      {
+        binding: 1,
+        visibility: GPUShaderStage.FRAGMENT,
+        buffer: {
+          type: 'uniform',
+        },
+      },
+      {
+        binding: 2,
+        visibility: GPUShaderStage.FRAGMENT,
+        texture: {
+          sampleType: 'float',
+        },
+      },
+    ],
+  });
+  const drawAgentsRenderPipeline = device.createRenderPipeline({
+    label: 'draw agents: create render pipeline',
+    layout: device.createPipelineLayout({
+      bindGroupLayouts: [drawAgentsBindGroupLayout],
+    }),
+    vertex: {
+      entryPoint: 'vertexShader',
+      module: drawAgentsShaderModule,
+    },
+    fragment: {
+      entryPoint: 'fragmentShader',
+      module: drawAgentsShaderModule,
+      targets: [
+        {
+          format: canvasFormat,
+        },
+      ],
+    },
+    primitive: {
+      topology: 'triangle-list',
+    },
+  });
+  const drawAgentsBindGroup = device.createBindGroup({
+    label: 'draw agents: create bind group',
+    layout: drawAgentsBindGroupLayout,
+    entries: [
+      {
+        binding: 0,
+        resource: {
+          buffer: slimeSimUniformsBufferGPU,
+        },
+      },
+      {
+        binding: 1,
+        resource: {
+          buffer: colorizationUniformsBufferGPU,
+        },
+      },
+      {
+        binding: 2,
+        resource: gpuTextureForReadView,
+      },
+    ],
+  });
+  return { drawAgentsRenderPipeline, drawAgentsBindGroup };
+};
+
 export {
   createUpdateAgentsComputePipeline,
   createFadeAgentsTrailComputePipeline,
   createBlurAgentsTrailComputePipeline,
+  createDrawAgentsRenderPipeline,
 };

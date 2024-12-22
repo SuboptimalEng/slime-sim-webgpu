@@ -7,17 +7,11 @@ import {
   resetSlimeSimUniformsBuffer,
 } from './initializeHelpers';
 
-const initializeWebGPU = async () => {
+const initializeWebGPU = async (canvasWidth: number, canvasHeight: number) => {
   const canvas = document.querySelector('canvas');
   if (!canvas) {
     throw new Error('No canvas detected in the browser.');
   }
-  canvas.width = 800;
-  canvas.height = 600;
-  // canvas.width = 1600;
-  // canvas.height = 900;
-  // canvas.width /= 2.0;
-  // canvas.height /= 2.0;
 
   if (!navigator.gpu) {
     throw new Error('WebGPU is not supported in this browser.');
@@ -40,6 +34,8 @@ const initializeWebGPU = async () => {
     );
   });
 
+  canvas.width = canvasWidth;
+  canvas.height = canvasHeight;
   const canvasFormat = navigator.gpu.getPreferredCanvasFormat();
   const context = canvas.getContext('webgpu');
   if (!context) {
@@ -221,7 +217,14 @@ const initializeGPUTextures = (
     },
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
   });
-  return { gpuTextureForStorage, gpuTextureForRead };
+  const gpuTextureForStorageView = gpuTextureForStorage.createView();
+  const gpuTextureForReadView = gpuTextureForRead.createView();
+  return {
+    gpuTextureForStorage,
+    gpuTextureForStorageView,
+    gpuTextureForRead,
+    gpuTextureForReadView,
+  };
 };
 
 const initializeAgents = (
