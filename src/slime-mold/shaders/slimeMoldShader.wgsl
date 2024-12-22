@@ -1,98 +1,11 @@
-struct UniformsStruct {
-  uResolution: vec2f,
-
-  // general
-  uRadius: f32,
-  uStepSize: f32,
-  uDecayT: f32,
-
-  // sensor
-  uSensorOffset: f32,
-  uSensorAngle: f32,
-  uRotationAngle: f32,
-
-  // other
-  uDiffuseKernel: f32,
-};
-
-// =============================================================
-// blur agents trail
-// =============================================================
-
-struct ColorUniformsStruct {
-  // seems like boolean are not supported when being passed in as gpu buffer
-  // if blurTrail == 0 disabled
-  // else enabled
-  blurTrail: f32,
-  enableLighting: f32,
-
-  slimeColor: vec3f,
-};
-
-@group(0) @binding(0) var<uniform> canvasSize: vec2<u32>;
-@group(0) @binding(1) var<uniform> blurAgentsTrailUniforms: ColorUniformsStruct;
-@group(0) @binding(2) var readFadeTrailTexture: texture_2d<f32>;
-@group(0) @binding(3) var writeFadeTrailTexture: texture_storage_2d<rgba8unorm, write>;
-
-@compute
-// @workgroup_size(1)
-@workgroup_size(8, 8)
-// @workgroup_size(16, 16)
-fn blurAgentsTrail(
-  @builtin(global_invocation_id) id: vec3u,
-) {
-  var magenta = vec4f(1.0, 0.0, 1.0, 1.0);
-  var cumulativeColor = vec4f(0.0);
-  var pixelCount = 0.0;
-  // setting diffuseKernel to 0 means it's essentially not running
-  // todo: see if using this is useful for gradient colors
-  var diffuseKernel = i32(blurAgentsTrailUniforms.blurTrail);
-
-  if (id.x >= canvasSize.x || id.y >= canvasSize.y) {
-  // if (id.x >= 300 || id.y >= 300) {
-      return; // Avoid out-of-bounds access
-  }
-
-  if (diffuseKernel > 0) {
-    // why is this for loop slow?
-    // for (var x = -1; x <= 1; x++) {
-    //   for (var y = -1; y <= 1; y++) {
-    //     var currPos = vec2i(id.xy) + vec2i(x, y);
-    //     cumulativeColor += textureLoad(readFadeTrailTexture, currPos, 0);
-    //     pixelCount += 1;
-    //   }
-    // }
-    // cumulativeColor = cumulativeColor / pixelCount;
-
-    // this seems faster?
-    var currPos = vec2i(id.xy);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(-1, 1), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(0, 1), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(1, 1), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(-1, 0), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(0, 0), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(1, 0), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(-1, -1), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(0, -1), 0);
-    cumulativeColor += textureLoad(readFadeTrailTexture, currPos + vec2i(1, -1), 0);
-    cumulativeColor /= 9.0;
-  } else {
-    cumulativeColor += textureLoad(readFadeTrailTexture, vec2i(id.xy), 0);
-  }
-
-  textureStore(writeFadeTrailTexture, id.xy, cumulativeColor);
-}
-
-
 // =============================================================
 // draw texture vertex shader
 // =============================================================
-
 @vertex
 fn vertexShader(
   @builtin(vertex_index) index: u32
-) -> @builtin(position) vec4<f32> {
-  var positions = array<vec4<f32>, 6>(
+) -> @builtin(position) vec4f {
+  var positions = array<vec4f, 6>(
     vec4(-1.0, -1.0, 0.0, 1.0),
     vec4( 1.0, -1.0, 0.0, 1.0),
     vec4(-1.0,  1.0, 0.0, 1.0),
@@ -107,7 +20,6 @@ fn vertexShader(
 // =============================================================
 // draw texture fragment shader
 // =============================================================
-
 @group(0) @binding(0) var<uniform> fragmentShaderUniforms: UniformsStruct;
 @group(0) @binding(1) var<uniform> fragmentShaderColorUniforms: ColorUniformsStruct;
 @group(0) @binding(2) var textureInput: texture_2d<f32>;

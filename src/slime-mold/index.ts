@@ -1,7 +1,9 @@
 import { Pane } from 'tweakpane';
-import slimeMoldShader from './slimeMoldShader.wgsl?raw';
-import updateAgentsWGSL from './compute.updateAgents.wgsl?raw';
-import fadeAgentsTrailWGSL from './compute.fadeAgentsTrail.wgsl?raw';
+import commonUniformsWGSL from './shaders/commonUniforms.wgsl?raw';
+import slimeMoldShaderWGSL from './shaders/slimeMoldShader.wgsl?raw';
+import c1UpdateAgentsWGSL from './shaders/c1_updateAgents.comp.wgsl?raw';
+import c2FadeAgentsTrailWGSL from './shaders/c2_fadeAgentsTrail.comp.wgsl?raw';
+import c3BlurAgentsTrailWGSL from './shaders/c3_blurAgentsTrail.comp.wgsl?raw';
 import { UNIFORMS_COLORIZATION, UNIFORMS_SLIME_SIM } from './uniforms';
 
 const createAndBindCanvasSizeUniforms = (
@@ -443,17 +445,16 @@ const main = async () => {
   // ===================================
   // create shader modules
   // ===================================
+  const wgslShaderCode = [
+    commonUniformsWGSL,
+    c1UpdateAgentsWGSL,
+    c2FadeAgentsTrailWGSL,
+    c3BlurAgentsTrailWGSL,
+    slimeMoldShaderWGSL,
+  ].join('');
   const shaderModule = device.createShaderModule({
     label: 'create shader module',
-    code: slimeMoldShader,
-  });
-  const updateAgentsShaderModule = device.createShaderModule({
-    label: 'update agents shader module',
-    code: updateAgentsWGSL,
-  });
-  const fadeAgentsTrailShaderModule = device.createShaderModule({
-    label: 'fade agents trail shader module',
-    code: fadeAgentsTrailWGSL,
+    code: wgslShaderCode,
   });
 
   // ===================================
@@ -503,7 +504,7 @@ const main = async () => {
     // layout: 'auto',
     layout: updateAgentsComputePipelineLayout,
     compute: {
-      module: updateAgentsShaderModule,
+      module: shaderModule,
       entryPoint: 'updateAgents',
     },
   });
@@ -577,7 +578,7 @@ const main = async () => {
     layout: fadeAgentsTrailComputePipelineLayout,
     compute: {
       entryPoint: 'fadeAgentsTrail',
-      module: fadeAgentsTrailShaderModule,
+      module: shaderModule,
     },
   });
   const fadeAgentsTrailBindGroup = device.createBindGroup({
@@ -646,7 +647,6 @@ const main = async () => {
   });
   const blurAgentsTrailPipeline = device.createComputePipeline({
     label: 'blur agents trail: create compute pipeline',
-    // layout: 'auto',
     layout: blurAgentsTrailPipelineLayout,
     compute: {
       entryPoint: 'blurAgentsTrail',
@@ -655,7 +655,6 @@ const main = async () => {
   });
   const blurAgentsTrailBindGroup = device.createBindGroup({
     label: 'blur agents trail: create bind group',
-    // layout: blurAgentsTrailPipeline.getBindGroupLayout(0),
     layout: blurAgentsTrailComputeBindGroupLayout,
     entries: [
       {
@@ -709,7 +708,6 @@ const main = async () => {
   });
   const renderPipeline = device.createRenderPipeline({
     label: 'create render pipeline',
-    // layout: 'auto',
     layout: device.createPipelineLayout({
       bindGroupLayouts: [renderBindGroupLayout],
     }),

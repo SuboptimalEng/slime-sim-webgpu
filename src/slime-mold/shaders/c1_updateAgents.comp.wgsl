@@ -1,22 +1,6 @@
 // =============================================================
 // update agents compute shader
 // =============================================================
-struct UniformsStruct {
-  uResolution: vec2f,
-
-  // general
-  uRadius: f32,
-  uStepSize: f32,
-  uDecayT: f32,
-
-  // sensor
-  uSensorOffset: f32,
-  uSensorAngle: f32,
-  uRotationAngle: f32,
-
-  // other
-  uDiffuseKernel: f32,
-};
 
 struct Agent {
   position: vec2f,

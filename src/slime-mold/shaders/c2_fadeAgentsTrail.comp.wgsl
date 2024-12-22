@@ -1,23 +1,6 @@
 // =============================================================
 // fade agents trail
 // =============================================================
-struct UniformsStruct {
-  uResolution: vec2f,
-
-  // general
-  uRadius: f32,
-  uStepSize: f32,
-  uDecayT: f32,
-
-  // sensor
-  uSensorOffset: f32,
-  uSensorAngle: f32,
-  uRotationAngle: f32,
-
-  // other
-  uDiffuseKernel: f32,
-};
-
 @group(0) @binding(0) var<uniform> fadeAgentsTrailUniforms: UniformsStruct;
 @group(0) @binding(1) var readTexture: texture_2d<f32>;
 @group(0) @binding(2) var writeTexture: texture_storage_2d<rgba8unorm, write>;
