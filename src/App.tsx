@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { cleanUp, main } from './slime-mold';
+import { main, cleanUp } from './slime-mold/main';
 
 function App() {
   useEffect(() => {
