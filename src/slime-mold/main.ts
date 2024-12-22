@@ -148,14 +148,12 @@ const main = async () => {
       {
         binding: 0,
         resource: {
-          label: 'uniforms buffer gpu resource',
           buffer: slimeSimUniformsBufferGPU,
         },
       },
       {
         binding: 1,
         resource: {
-          label: 'agents buffer gpu resource',
           buffer: agentsBufferGPU,
         },
       },
