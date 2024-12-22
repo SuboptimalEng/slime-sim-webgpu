@@ -1,6 +1,17 @@
 # 🦠 Slime Mold Simulation WebGPU
 
-Recreating Sebastian Lague's slime mold simulation on the web with WebGPU and TypeScript.
+This repository contains the code for my physarum slime mold simulation. It's essentially
+a recreation of Sebastian Lague's slime mold project (albiet with fewer features).
+
+I made it to learn more about the WebGPU API. Running it locally is super easy thanks to
+the JavaScript ecosystem.
+
+```
+git clone https://github.com/SuboptimalEng/slime-sim-webgpu.git
+cd slime-sim-webgpu
+npm install
+npm run dev
+```
 
 ## Resources
 
