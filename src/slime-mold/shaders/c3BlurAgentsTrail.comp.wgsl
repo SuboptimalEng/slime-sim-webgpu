@@ -3,8 +3,8 @@
 // =============================================================
 // @group(0) @binding(0) var<uniform> canvasSize: vec2u;
 // @group(0) @binding(0) var<uniform> : vec2u;
-@group(0) @binding(0) var<uniform> blurAgentsTrailSlimeSimUniforms: SlimeSimUniformsStruct;
-@group(0) @binding(1) var<uniform> blurAgentsTrailUniforms: ColorizationUniformsStruct;
+@group(0) @binding(0) var<uniform> uSlimeSim: SlimeSimUniformsStruct;
+@group(0) @binding(1) var<uniform> uColorization: ColorizationUniformsStruct;
 @group(0) @binding(2) var readFadeTrailTexture: texture_2d<f32>;
 @group(0) @binding(3) var writeFadeTrailTexture: texture_storage_2d<rgba8unorm, write>;
 
@@ -20,9 +20,9 @@ fn blurAgentsTrail(
   var pixelCount = 0.0;
   // setting diffuseKernel to 0 means it's essentially not running
   // todo: see if using this is useful for gradient colors
-  var diffuseKernel = i32(blurAgentsTrailUniforms.blurTrail);
+  var diffuseKernel = i32(uColorization.blurTrail);
 
-  let canvasSize = blurAgentsTrailSlimeSimUniforms.uResolution;
+  let canvasSize = uSlimeSim.uResolution;
   if (id.x >= u32(canvasSize.x) || id.y >= u32(canvasSize.y)) {
     // if (id.x >= 300 || id.y >= 300) {
     return; // Avoid out-of-bounds access
