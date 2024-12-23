@@ -71,7 +71,7 @@ fn fragmentShader(
     // Mix between the checkerboard color, and slime color based on whether or not
     // the texture color is set to white. We can check for this using the r, g, or
     // b channels. Using alpha channel wouldn't make sense because it's always 1.
-    fragColor = mix(checkerBoardColor, uSlimeColor, currTextureColor.r);
+    fragColor = mix(checkerBoardColor, uSlimeColor, smoothstep(0.0, 1.0, currTextureColor.r));
     return vec4(fragColor, 1.0);
   }
 
@@ -102,18 +102,7 @@ fn fragmentShader(
   let specularColor = lightColor * specularIntensity;
 
   fragColor = baseColor + specularColor;
-  let color: vec4f = textureLoad(readFromThisTexture, vec2i(uv * uSlimeSim.resolution), 0);
-
-  // litColor = mix(surfaceNormal + vec3(0.0, 0.0, 1.0), litColor , smoothstep(0.9, 1.0, color.g));
-  // litColor = (surfaceNormal + vec3(0.0, 0.0, 1.0)) + litColor;
-
   fragColor = pow(fragColor, vec3(2.0));
-  fragColor = mix(checkerBoardColor, fragColor, smoothstep(0.0, 1.0, color.g));
-
-  // litColor = litColor * vec4(0.0, 1.0, 0.0, 0.0).g;
-  // litColor = mix(litColor, litColor + litColor * 0.25, color.g);
-  // litColor *= vec3(0.22, 1.0, 0.08);
-  // litColor = pow(litColor, vec3(2.));
-
+  fragColor = mix(checkerBoardColor, fragColor, smoothstep(0.0, 1.0, currTextureColor.r));
   return vec4f(fragColor, 1.0);
 }
