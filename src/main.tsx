@@ -5,8 +5,8 @@ import App from './App.tsx';
 
 createRoot(document.getElementById('root')!).render(
   // todo: use strict mode
-  <StrictMode>
-    <App />
-  </StrictMode>,
-  // <App />,
+  // <StrictMode>
+  //   <App />
+  // </StrictMode>,
+  <App />,
 );

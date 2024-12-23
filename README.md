@@ -5,10 +5,17 @@ a recreation of Sebastian Lague's slime mold project (albiet with fewer features
 it to learn more about the WebGPU API.
 
 ```
+# Setup Guide (for everyone).
 git clone https://github.com/SuboptimalEng/slime-sim-webgpu.git
 cd slime-sim-webgpu
 npm install
 npm run dev
+
+# How to Deploy to GitHub Pages (mainly for me).
+# First, go to main.tsx file and enable StrictMode.
+npm run build
+npm run deploy
+# Disable StrictMode before running locally and pushing to GitHub.
 ```
 
 <img src="/_screenshots/slime-mold-01.png">
