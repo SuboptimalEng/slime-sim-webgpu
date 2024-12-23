@@ -103,11 +103,11 @@ const initializeSlimeSimUniforms = (
   // =============================================================
   // Add tweakpane handlers.
   // =============================================================
-  pane.on('change', (e) => {
+  pane.on('change', () => {
     resetSlimeSimUniformsBuffer(device, canvas, uniformsCPU, uniformsBufferGPU);
     console.log('pane changed!');
   });
-  randomizeAgentSettingsButton.on('click', (e) => {
+  randomizeAgentSettingsButton.on('click', () => {
     console.log('randomize agents clicked!');
     const getRandomValue = (min: number, max: number, step: number) => {
       const range = (max - min) / step;
@@ -177,7 +177,7 @@ const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
   // =============================================================
   // Add tweakpane handlers.
   // =============================================================
-  colorizationFolder.on('change', (e) => {
+  colorizationFolder.on('change', () => {
     resetColorizationUniformsBuffer(
       device,
       colorizationUniformsArrayCPU,
@@ -272,12 +272,12 @@ const initializeAgents = (
   // =============================================================
   // Add tweakpane handlers.
   // =============================================================
-  simulationFolder.on('change', (e) => {
+  simulationFolder.on('change', () => {
     resetAgentsBuffer(device, canvas, agentsBufferGPU);
     resetGPUTextures(device, canvas, gpuTextureForStorage, gpuTextureForRead);
   });
 
-  downloadImageButton.on('click', (e) => {
+  downloadImageButton.on('click', () => {
     const canvasImage = canvas.toDataURL('image/png');
 
     // this can be used to download any image from webpage to local disk
