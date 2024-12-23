@@ -32,10 +32,19 @@ const main = async () => {
   // canvasFormat -> needed for render pipeline fragment shader settings
   // context -> needed to create a view in the render pass
   // =============================================================
-  const { canvas, device, canvasFormat, context } = await initializeWebGPU(
-    canvasWidth,
-    canvasHeight,
-  );
+  let device: GPUDevice | null = null;
+  let canvas: HTMLCanvasElement | null = null;
+  let canvasFormat: GPUTextureFormat | null = null;
+  let context: GPUCanvasContext | null = null;
+  try {
+    const result = await initializeWebGPU(canvasWidth, canvasHeight);
+    device = result.device;
+    canvas = result.canvas;
+    canvasFormat = result.canvasFormat;
+    context = result.context;
+  } catch (e: any) {
+    throw e;
+  }
 
   // =============================================================
   // Initialize gpu storage texture that can be written to in compute shaders.

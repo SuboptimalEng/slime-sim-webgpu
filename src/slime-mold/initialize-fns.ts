@@ -47,7 +47,7 @@ const initializeWebGPU = async (canvasWidth: number, canvasHeight: number) => {
     format: canvasFormat,
   });
 
-  return { canvas, canvasFormat, context, device };
+  return { device, canvas, canvasFormat, context };
 };
 
 const initializeSlimeSimUniforms = (
