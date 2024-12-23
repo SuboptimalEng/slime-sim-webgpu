@@ -1,8 +1,8 @@
-import commonUniformsWGSL from './shaders/commonUniforms.wgsl?raw';
-import c1UpdateAgentsWGSL from './shaders/c1UpdateAgents.comp.wgsl?raw';
-import c2FadeAgentsTrailWGSL from './shaders/c2FadeAgentsTrail.comp.wgsl?raw';
-import c3BlurAgentsTrailWGSL from './shaders/c3BlurAgentsTrail.comp.wgsl?raw';
-import r1DrawAgentsWGSL from './shaders/r1DrawAgents.render.wgsl?raw';
+import commonUniformsWGSL from './shaders/common-uniforms.wgsl?raw';
+import c1UpdateAgentsWGSL from './shaders/compute-01-update-agents.wgsl?raw';
+import c2FadeAgentsTrailWGSL from './shaders/compute-02-fade-agents-trail.wgsl?raw';
+import c3BlurAgentsTrailWGSL from './shaders/compute-03-blur-agents-trail.wgsl?raw';
+import r1DrawAgentsWGSL from './shaders/render-01-draw-agents.wgsl?raw';
 
 const createUpdateAgentsComputePipeline = (
   device: GPUDevice,

@@ -5,7 +5,7 @@ import {
   resetColorizationUniformsBuffer,
   resetGPUTextures,
   resetSlimeSimUniformsBuffer,
-} from './initializeHelpers';
+} from './initialize-helpers';
 
 const initializeWebGPU = async (canvasWidth: number, canvasHeight: number) => {
   const canvas = document.querySelector('canvas');

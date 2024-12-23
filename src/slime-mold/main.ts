@@ -6,13 +6,13 @@ import {
   initializeAgents,
   initializeColorizationUniforms,
   initializeSlimeSimUniforms,
-} from './initializeFns';
+} from './initialize-fns';
 import {
   createUpdateAgentsComputePipeline,
   createFadeAgentsTrailComputePipeline,
   createBlurAgentsTrailComputePipeline,
   createDrawAgentsRenderPipeline,
-} from './createPipelineFns';
+} from './create-pipeline-fns';
 
 // =============================================================
 // These global variables are requied for the cleanUp fn.
