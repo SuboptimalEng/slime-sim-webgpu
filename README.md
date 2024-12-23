@@ -4,7 +4,7 @@ This repository contains the code for my physarum slime mold simulation. It's es
 a recreation of Sebastian Lague's slime mold project (albiet with fewer features). I made
 it to learn more about the WebGPU API.
 
-Check out the [demo on my website!](https://suboptimaleng.com/slime-sim-webgpu/) It may not
+Check out the [demo on my website](https://suboptimaleng.com/slime-sim-webgpu/). It may not
 work on mobile devices, so I'd recommend trying it on a desktop computer with the Chrome
 browser.
 
