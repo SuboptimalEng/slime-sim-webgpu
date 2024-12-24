@@ -1,15 +1,16 @@
 # 🐌 Slime Sim WebGPU
 
-This repository contains the code for my physarum slime mold simulation. It's essentially
-a recreation of Sebastian Lague's slime mold project (albiet with fewer features). I made
-it to learn more about the WebGPU API.
+This repository contains the code for my physarum slime mold simulation. I made
+it to learn more about WebGPU and compute shaders. It's essentially a recreation
+of Sebastian Lague's slime mold project (albiet with fewer features).
+
+Here's a 5-minute dev log on [YouTube](https://www.youtube.com/watch?v=nBqZOz7AF34)
+where I go over some of the of high-level techinical details and showcase an extended
+demo.
 
 <!--
 Remember to add this:
 Here's a 30-second demo on [Twitter](), [Threads](), and [Reddit]().
-
-Here's a 5-minute dev log on [YouTube]() where I go over some of the of high-level techinical
-details and showcase an extended demo.
 -->
 
 ```
