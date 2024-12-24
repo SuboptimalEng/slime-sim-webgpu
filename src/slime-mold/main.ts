@@ -23,8 +23,10 @@ let rafId: number = 0;
 const main = async () => {
   let canvasWidth = 800;
   let canvasHeight = 600;
-  // canvasWidth = 1600;
-  // canvasHeight = 900;
+  canvasWidth = 1600;
+  canvasHeight = 900;
+  // canvasWidth *= 0.75;
+  // canvasHeight *= 0.75;
 
   // =============================================================
   // canvas -> ref to canvas, mainly used width/height info
