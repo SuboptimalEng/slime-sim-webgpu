@@ -1,4 +1,7 @@
+import { TgpuBuffer } from 'typegpu';
+import { vec2f } from 'typegpu/data';
 import { UNIFORMS_COLORIZATION, UNIFORMS_SLIME_SIM } from './uniforms';
+import { SlimeSimUniformsStruct } from './data-types';
 
 const resetAgentsBuffer = (
   device: GPUDevice,
@@ -32,26 +35,23 @@ const resetAgentsBuffer = (
 };
 
 const resetSlimeSimUniformsBuffer = (
-  device: GPUDevice,
   canvas: HTMLCanvasElement,
-  uniformsCPU: Float32Array,
-  uniformsBufferGPU: GPUBuffer,
+  uniformsBufferGPU: TgpuBuffer<typeof SlimeSimUniformsStruct>,
 ) => {
-  // canvas
-  uniformsCPU[0] = canvas.width;
-  uniformsCPU[1] = canvas.height;
+  uniformsBufferGPU.write({
+    // canvas
+    resolution: vec2f(canvas.width, canvas.height),
+    // general
+    radius: UNIFORMS_SLIME_SIM.radius.value,
+    stepSize: UNIFORMS_SLIME_SIM.stepSize.value,
+    decayT: UNIFORMS_SLIME_SIM.decayT.value,
+    // sensor
+    sensorOffset: UNIFORMS_SLIME_SIM.sensorOffset.value,
+    sensorAngle: UNIFORMS_SLIME_SIM.sensorAngle.value,
+    rotationAngle: UNIFORMS_SLIME_SIM.rotationAngle.value,
+    diffuseKernel: 0,
+  });
 
-  // general
-  uniformsCPU[2] = UNIFORMS_SLIME_SIM.radius.value;
-  uniformsCPU[3] = UNIFORMS_SLIME_SIM.stepSize.value;
-  uniformsCPU[4] = UNIFORMS_SLIME_SIM.decayT.value;
-
-  // sensor
-  uniformsCPU[5] = UNIFORMS_SLIME_SIM.sensorOffset.value;
-  uniformsCPU[6] = UNIFORMS_SLIME_SIM.sensorAngle.value;
-  uniformsCPU[7] = UNIFORMS_SLIME_SIM.rotationAngle.value;
-
-  device.queue.writeBuffer(uniformsBufferGPU, 0, uniformsCPU);
   return uniformsBufferGPU;
 };
 

@@ -1,59 +1,34 @@
+import tgpu, { type TgpuBuffer, type TgpuRoot, type Uniform } from 'typegpu';
 import commonUniformsWGSL from './shaders/common-uniforms.wgsl?raw';
 import c1UpdateAgentsWGSL from './shaders/compute-01-update-agents.wgsl?raw';
 import c2FadeAgentsTrailWGSL from './shaders/compute-02-fade-agents-trail.wgsl?raw';
 import c3BlurAgentsTrailWGSL from './shaders/compute-03-blur-agents-trail.wgsl?raw';
 import r1DrawAgentsWGSL from './shaders/render-01-draw-agents.wgsl?raw';
+import { AgentArray, ColorizationUniformsStruct, SlimeSimUniformsStruct } from './data-types';
 
 const createUpdateAgentsComputePipeline = (
-  device: GPUDevice,
-  slimeSimUniformsBufferGPU: GPUBuffer,
+  root: TgpuRoot,
+  slimeSimUniformsBufferGPU: TgpuBuffer<typeof SlimeSimUniformsStruct> & Uniform,
   agentsBufferGPU: GPUBuffer,
   gpuTextureForReadView: GPUTextureView,
   gpuTextureForStorageView: GPUTextureView,
 ) => {
+  const device = root.device;
   const updateAgentsWGSL = [commonUniformsWGSL, c1UpdateAgentsWGSL].join('');
   const updateAgentsShaderModule = device.createShaderModule({
     label: 'update agents: create shader module',
     code: updateAgentsWGSL,
   });
-  const updateAgentsComputeBindGroupLayout = device.createBindGroupLayout({
-    label: 'update agents: create compute bind group layout',
-    entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: 'uniform',
-        },
-      },
-      {
-        binding: 1,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: 'storage',
-        },
-      },
-      {
-        binding: 2,
-        visibility: GPUShaderStage.COMPUTE,
-        texture: {
-          viewDimension: '2d',
-        },
-      },
-      {
-        binding: 3,
-        visibility: GPUShaderStage.COMPUTE,
-        storageTexture: {
-          format: 'rgba8unorm',
-          access: 'write-only',
-          viewDimension: '2d',
-        },
-      },
-    ],
-  });
+  
+  const updateAgentsComputeBindGroupLayout = tgpu.bindGroupLayout({
+    uSlimeSim: { uniform: SlimeSimUniformsStruct },
+    agentsArray: { storage: AgentArray, access: 'mutable' },
+    readFromThisTexture: { texture: 'float' },
+    writeToThisTexture: { storageTexture: 'rgba8unorm', access: 'writeonly'},
+  }).$name('update agents: create compute bind group layout');
   const updateAgentsComputePipelineLayout = device.createPipelineLayout({
     label: 'update agents: create compute pipeline layout',
-    bindGroupLayouts: [updateAgentsComputeBindGroupLayout],
+    bindGroupLayouts: [root.unwrap(updateAgentsComputeBindGroupLayout)],
   });
   const updateAgentsComputePipeline = device.createComputePipeline({
     label: 'update agents: create compute pipeline',
@@ -65,42 +40,22 @@ const createUpdateAgentsComputePipeline = (
       module: updateAgentsShaderModule,
     },
   });
-  const updateAgentsComputeBindGroup = device.createBindGroup({
-    label: 'update agents: create compute bind group',
-    layout: updateAgentsComputeBindGroupLayout,
-    // layout: updateAgentsComputePipeline.getBindGroupLayout(0),
-    entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer: slimeSimUniformsBufferGPU,
-        },
-      },
-      {
-        binding: 1,
-        resource: {
-          buffer: agentsBufferGPU,
-        },
-      },
-      {
-        binding: 2,
-        resource: gpuTextureForReadView,
-      },
-      {
-        binding: 3,
-        resource: gpuTextureForStorageView,
-      },
-    ],
+  const updateAgentsComputeBindGroup = root.createBindGroup(updateAgentsComputeBindGroupLayout, {
+    uSlimeSim: slimeSimUniformsBufferGPU,
+    agentsArray: agentsBufferGPU,
+    readFromThisTexture: gpuTextureForReadView,
+    writeToThisTexture: gpuTextureForStorageView,
   });
   return { updateAgentsComputePipeline, updateAgentsComputeBindGroup };
 };
 
 const createFadeAgentsTrailComputePipeline = (
-  device: GPUDevice,
-  slimeSimUniformsBufferGPU: GPUBuffer,
+  root: TgpuRoot,
+  slimeSimUniformsBufferGPU: TgpuBuffer<typeof SlimeSimUniformsStruct> & Uniform,
   gpuTextureForReadView: GPUTextureView,
   gpuTextureForStorageView: GPUTextureView,
 ) => {
+  const device = root.device;
   const fadeAgentsTrailWGSL = [commonUniformsWGSL, c2FadeAgentsTrailWGSL].join(
     '',
   );
@@ -108,37 +63,14 @@ const createFadeAgentsTrailComputePipeline = (
     label: 'fade agents trail: create shader module',
     code: fadeAgentsTrailWGSL,
   });
-  const fadeAgentsTrailComputeBindGroupLayout = device.createBindGroupLayout({
-    label: 'fade agents trail: create bind group layout',
-    entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: 'uniform',
-        },
-      },
-      {
-        binding: 1,
-        visibility: GPUShaderStage.COMPUTE,
-        texture: {
-          viewDimension: '2d',
-        },
-      },
-      {
-        binding: 2,
-        visibility: GPUShaderStage.COMPUTE,
-        storageTexture: {
-          format: 'rgba8unorm',
-          access: 'write-only',
-          viewDimension: '2d',
-        },
-      },
-    ],
-  });
+  const fadeAgentsTrailComputeBindGroupLayout = tgpu.bindGroupLayout({
+    uSlimeSim: { uniform: SlimeSimUniformsStruct },
+    readFromThisTexture: { texture: 'float' },
+    writeToThisTexture: { storageTexture: 'rgba8unorm', access: 'writeonly' },
+  }).$name('fade agents trail: create bind group layout');
   const fadeAgentsTrailComputePipelineLayout = device.createPipelineLayout({
     label: 'fade agents trail: create compute pipeline layout',
-    bindGroupLayouts: [fadeAgentsTrailComputeBindGroupLayout],
+    bindGroupLayouts: [root.unwrap(fadeAgentsTrailComputeBindGroupLayout)],
   });
   const fadeAgentsTrailComputePipeline = device.createComputePipeline({
     label: 'fade agents trail: create compute pipeline',
@@ -148,82 +80,38 @@ const createFadeAgentsTrailComputePipeline = (
       module: fadeAgentsTrailShaderModule,
     },
   });
-  const fadeAgentsTrailBindGroup = device.createBindGroup({
-    label: 'fade agents trail: create bind group',
-    // layout: fadeAgentsTrailComputePipeline.getBindGroupLayout(0),
-    layout: fadeAgentsTrailComputeBindGroupLayout,
-    entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer: slimeSimUniformsBufferGPU,
-        },
-      },
-      {
-        binding: 1,
-        resource: gpuTextureForReadView,
-      },
-      {
-        binding: 2,
-        resource: gpuTextureForStorageView,
-      },
-    ],
+  const fadeAgentsTrailBindGroup = root.createBindGroup(fadeAgentsTrailComputeBindGroupLayout, {
+    uSlimeSim: slimeSimUniformsBufferGPU,
+    readFromThisTexture: gpuTextureForReadView,
+    writeToThisTexture: gpuTextureForStorageView,
   });
 
   return { fadeAgentsTrailComputePipeline, fadeAgentsTrailBindGroup };
 };
 
 const createBlurAgentsTrailComputePipeline = (
-  device: GPUDevice,
-  slimeSimUniformsBufferGPU: GPUBuffer,
+  root: TgpuRoot,
+  slimeSimUniformsBufferGPU: TgpuBuffer<typeof SlimeSimUniformsStruct> & Uniform,
   colorizationUniformsBufferGPU: GPUBuffer,
   gpuTextureForReadView: GPUTextureView,
   gpuTextureForStorageView: GPUTextureView,
 ) => {
+  const device = root.device;
   // prettier-ignore
   const blurAgentsTrailWGSL = [commonUniformsWGSL, c3BlurAgentsTrailWGSL].join('');
   const blurAgentsTrailShaderModule = device.createShaderModule({
     label: 'blur agents trail: create shader module',
     code: blurAgentsTrailWGSL,
   });
-  const blurAgentsTrailComputeBindGroupLayout = device.createBindGroupLayout({
-    label: 'blur agents trail: create bindgroup layout',
-    entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: 'uniform',
-        },
-      },
-      {
-        binding: 1,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: {
-          type: 'uniform',
-        },
-      },
-      {
-        binding: 2,
-        visibility: GPUShaderStage.COMPUTE,
-        texture: {
-          viewDimension: '2d',
-        },
-      },
-      {
-        binding: 3,
-        visibility: GPUShaderStage.COMPUTE,
-        storageTexture: {
-          format: 'rgba8unorm',
-          access: 'write-only',
-          viewDimension: '2d',
-        },
-      },
-    ],
-  });
+  const blurAgentsTrailComputeBindGroupLayout = tgpu.bindGroupLayout({
+    uSlimeSim: { uniform: SlimeSimUniformsStruct },
+    uColorization: { uniform: ColorizationUniformsStruct },
+    readFromThisTexture: { texture: 'float', viewDimension: '2d' },
+    writeToThisTexture: { storageTexture: 'rgba8unorm', viewDimension: '2d', access: 'writeonly' },
+  }).$name('blur agents trail: create bindgroup layout');
   const blurAgentsTrailPipelineLayout = device.createPipelineLayout({
     label: 'blur agents trail: create pipeline layout',
-    bindGroupLayouts: [blurAgentsTrailComputeBindGroupLayout],
+    bindGroupLayouts: [root.unwrap(blurAgentsTrailComputeBindGroupLayout)],
   });
   const blurAgentsTrailPipeline = device.createComputePipeline({
     label: 'blur agents trail: create compute pipeline',
@@ -233,77 +121,37 @@ const createBlurAgentsTrailComputePipeline = (
       module: blurAgentsTrailShaderModule,
     },
   });
-  const blurAgentsTrailBindGroup = device.createBindGroup({
-    label: 'blur agents trail: create bind group',
-    layout: blurAgentsTrailComputeBindGroupLayout,
-    entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer: slimeSimUniformsBufferGPU,
-        },
-      },
-      {
-        binding: 1,
-        resource: {
-          buffer: colorizationUniformsBufferGPU,
-        },
-      },
-      {
-        binding: 2,
-        resource: gpuTextureForReadView,
-      },
-      {
-        binding: 3,
-        resource: gpuTextureForStorageView,
-      },
-    ],
+  const blurAgentsTrailBindGroup = root.createBindGroup(blurAgentsTrailComputeBindGroupLayout, {
+    uSlimeSim: slimeSimUniformsBufferGPU,
+    uColorization: colorizationUniformsBufferGPU,
+    readFromThisTexture: gpuTextureForReadView,
+    writeToThisTexture: gpuTextureForStorageView,
   });
   return { blurAgentsTrailPipeline, blurAgentsTrailBindGroup };
 };
 
 const createDrawAgentsRenderPipeline = (
-  device: GPUDevice,
+  root: TgpuRoot,
   canvasFormat: GPUTextureFormat,
-  slimeSimUniformsBufferGPU: GPUBuffer,
+  slimeSimUniformsBufferGPU: TgpuBuffer<typeof SlimeSimUniformsStruct> & Uniform,
   colorizationUniformsBufferGPU: GPUBuffer,
   gpuTextureForReadView: GPUTextureView,
 ) => {
+  const device = root.device;
   const drawAgentsWGSL = [commonUniformsWGSL, r1DrawAgentsWGSL].join('');
   const drawAgentsShaderModule = device.createShaderModule({
     label: 'draw agents: create shader module',
     code: drawAgentsWGSL,
   });
-  const drawAgentsBindGroupLayout = device.createBindGroupLayout({
-    label: 'draw agents: create bind group layout',
-    entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.FRAGMENT,
-        buffer: {
-          type: 'uniform',
-        },
-      },
-      {
-        binding: 1,
-        visibility: GPUShaderStage.FRAGMENT,
-        buffer: {
-          type: 'uniform',
-        },
-      },
-      {
-        binding: 2,
-        visibility: GPUShaderStage.FRAGMENT,
-        texture: {
-          sampleType: 'float',
-        },
-      },
-    ],
-  });
+  const drawAgentsBindGroupLayout = tgpu.bindGroupLayout({
+    uSlimeSim: { uniform: SlimeSimUniformsStruct },
+    uColorization: { uniform: ColorizationUniformsStruct },
+    readFromThisTexture: { texture: 'float', viewDimension: '2d' },
+  }).$name('draw agents: create bind group layout');
   const drawAgentsRenderPipeline = device.createRenderPipeline({
     label: 'draw agents: create render pipeline',
     layout: device.createPipelineLayout({
-      bindGroupLayouts: [drawAgentsBindGroupLayout],
+      bindGroupLayouts: [root.unwrap(drawAgentsBindGroupLayout)],
     }),
     vertex: {
       entryPoint: 'vertexShader',
@@ -322,27 +170,10 @@ const createDrawAgentsRenderPipeline = (
       topology: 'triangle-list',
     },
   });
-  const drawAgentsBindGroup = device.createBindGroup({
-    label: 'draw agents: create bind group',
-    layout: drawAgentsBindGroupLayout,
-    entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer: slimeSimUniformsBufferGPU,
-        },
-      },
-      {
-        binding: 1,
-        resource: {
-          buffer: colorizationUniformsBufferGPU,
-        },
-      },
-      {
-        binding: 2,
-        resource: gpuTextureForReadView,
-      },
-    ],
+  const drawAgentsBindGroup = root.createBindGroup(drawAgentsBindGroupLayout, {
+    uSlimeSim: slimeSimUniformsBufferGPU,
+    uColorization: colorizationUniformsBufferGPU,
+    readFromThisTexture: gpuTextureForReadView,
   });
   return { drawAgentsRenderPipeline, drawAgentsBindGroup };
 };

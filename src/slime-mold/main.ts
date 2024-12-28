@@ -1,4 +1,5 @@
 import { Pane } from 'tweakpane';
+import type { TgpuRoot } from 'typegpu';
 import { UNIFORMS_SLIME_SIM } from './uniforms';
 import {
   initializeWebGPU,
@@ -34,13 +35,15 @@ const main = async () => {
   // canvasFormat -> needed for render pipeline fragment shader settings
   // context -> needed to create a view in the render pass
   // =============================================================
+  let root: TgpuRoot | null = null;
   let device: GPUDevice | null = null;
   let canvas: HTMLCanvasElement | null = null;
   let canvasFormat: GPUTextureFormat | null = null;
   let context: GPUCanvasContext | null = null;
   try {
     const result = await initializeWebGPU(canvasWidth, canvasHeight);
-    device = result.device;
+    root = result.root;
+    device = result.root.device;
     canvas = result.canvas;
     canvasFormat = result.canvasFormat;
     context = result.context;
@@ -80,7 +83,7 @@ const main = async () => {
   // Initialize slime sim uniforms and tweakpane.
   // =============================================================
   const slimeSimUniformsBufferGPU = initializeSlimeSimUniforms(
-    device,
+    root,
     canvas,
     initializedPane,
   );
@@ -101,7 +104,7 @@ const main = async () => {
   // =============================================================
   const { updateAgentsComputePipeline, updateAgentsComputeBindGroup } =
     createUpdateAgentsComputePipeline(
-      device,
+      root,
       slimeSimUniformsBufferGPU,
       agentsBufferGPU,
       gpuTextureForReadView,
@@ -113,7 +116,7 @@ const main = async () => {
   // =============================================================
   const { fadeAgentsTrailComputePipeline, fadeAgentsTrailBindGroup } =
     createFadeAgentsTrailComputePipeline(
-      device,
+      root,
       slimeSimUniformsBufferGPU,
       gpuTextureForReadView,
       gpuTextureForStorageView,
@@ -124,7 +127,7 @@ const main = async () => {
   // =============================================================
   const { blurAgentsTrailPipeline, blurAgentsTrailBindGroup } =
     createBlurAgentsTrailComputePipeline(
-      device,
+      root,
       slimeSimUniformsBufferGPU,
       colorizationUniformsBufferGPU,
       gpuTextureForReadView,
@@ -136,7 +139,7 @@ const main = async () => {
   // =============================================================
   const { drawAgentsRenderPipeline, drawAgentsBindGroup } =
     createDrawAgentsRenderPipeline(
-      device,
+      root,
       canvasFormat,
       slimeSimUniformsBufferGPU,
       colorizationUniformsBufferGPU,
@@ -160,7 +163,7 @@ const main = async () => {
       label: 'update agents: begin compute pass',
     });
     updateAgentsComputePass.setPipeline(updateAgentsComputePipeline);
-    updateAgentsComputePass.setBindGroup(0, updateAgentsComputeBindGroup);
+    updateAgentsComputePass.setBindGroup(0, root.unwrap(updateAgentsComputeBindGroup));
     updateAgentsComputePass.dispatchWorkgroups(
       UNIFORMS_SLIME_SIM.numOfAgents.value,
     );
@@ -186,7 +189,7 @@ const main = async () => {
       label: 'fade agents trail: begin compute pass',
     });
     fadeAgentsTrailComputePass.setPipeline(fadeAgentsTrailComputePipeline);
-    fadeAgentsTrailComputePass.setBindGroup(0, fadeAgentsTrailBindGroup);
+    fadeAgentsTrailComputePass.setBindGroup(0, root.unwrap(fadeAgentsTrailBindGroup));
     fadeAgentsTrailComputePass.dispatchWorkgroups(canvas.width, canvas.height);
     fadeAgentsTrailComputePass.end();
 
@@ -206,7 +209,7 @@ const main = async () => {
       label: 'blur agents trail: begin compute pass',
     });
     blurAgentsTrailComputePass.setPipeline(blurAgentsTrailPipeline);
-    blurAgentsTrailComputePass.setBindGroup(0, blurAgentsTrailBindGroup);
+    blurAgentsTrailComputePass.setBindGroup(0, root.unwrap(blurAgentsTrailBindGroup));
     blurAgentsTrailComputePass.dispatchWorkgroups(
       // This means we need to create 8x8 workgroups in compute shader.
       canvas.width / 8,
@@ -238,7 +241,7 @@ const main = async () => {
       ],
     });
     drawAgentsRenderPass.setPipeline(drawAgentsRenderPipeline);
-    drawAgentsRenderPass.setBindGroup(0, drawAgentsBindGroup);
+    drawAgentsRenderPass.setBindGroup(0, root.unwrap(drawAgentsBindGroup));
     drawAgentsRenderPass.draw(6);
     drawAgentsRenderPass.end();
 
