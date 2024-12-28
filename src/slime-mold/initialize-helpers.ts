@@ -1,35 +1,26 @@
-import { TgpuBuffer } from 'typegpu';
-import { vec2f, vec3f } from 'typegpu/data';
+import type { TgpuBuffer } from 'typegpu';
+import { type TgpuArray, vec2f, vec3f } from 'typegpu/data';
 import { UNIFORMS_COLORIZATION, UNIFORMS_SLIME_SIM } from './uniforms';
-import { ColorizationUniformsStruct, SlimeSimUniformsStruct } from './data-types';
+import { AgentStruct, ColorizationUniformsStruct, SlimeSimUniformsStruct } from './data-types';
 
 const resetAgentsBuffer = (
-  device: GPUDevice,
   canvas: HTMLCanvasElement,
-  agentsBufferGPU: GPUBuffer,
+  agentsBufferGPU: TgpuBuffer<TgpuArray<typeof AgentStruct>>,
 ) => {
+  const startRadius = UNIFORMS_SLIME_SIM.startRadius.value;
   const numOfAgents = UNIFORMS_SLIME_SIM.numOfAgents.value;
-  const agentsArraySize = numOfAgents * 4;
-  const agentsArrayCPU = new Float32Array(agentsArraySize);
 
-  // initialize agents data
-  for (let i = 0; i < numOfAgents; i++) {
-    // agent position
+  // write to gpu buffer
+  agentsBufferGPU.write(Array.from({ length: numOfAgents }).map(() => {
     let x = canvas.width / 2;
     let y = canvas.height / 2;
     let r = Math.random() * 10;
-    agentsArrayCPU[i * 4 + 0] =
-      x + Math.cos(r) * UNIFORMS_SLIME_SIM.startRadius.value;
-    agentsArrayCPU[i * 4 + 1] =
-      y + Math.sin(r) * UNIFORMS_SLIME_SIM.startRadius.value;
 
-    // agent direction
-    agentsArrayCPU[i * 4 + 2] = Math.random() * 2 - 1;
-    agentsArrayCPU[i * 4 + 3] = Math.random() * 2 - 1;
-  }
-
-  // write to gpu buffer
-  device.queue.writeBuffer(agentsBufferGPU, 0, agentsArrayCPU);
+    return {
+      position: vec2f(x + Math.cos(r) * startRadius, y + Math.sin(r) * startRadius),
+      direction: vec2f(Math.random() * 2 - 1, Math.random() * 2 - 1),
+    };
+  }));
 
   return agentsBufferGPU;
 };

@@ -7,7 +7,7 @@ import {
   resetGPUTextures,
   resetSlimeSimUniformsBuffer,
 } from './initialize-helpers';
-import { ColorizationUniformsStruct, SlimeSimUniformsStruct } from './data-types';
+import { AgentArray, ColorizationUniformsStruct, SlimeSimUniformsStruct } from './data-types';
 
 const initializeWebGPU = async (canvasWidth: number, canvasHeight: number) => {
   const canvas = document.querySelector('canvas');
@@ -203,12 +203,13 @@ const initializeGPUTextures = (
 };
 
 const initializeAgents = (
-  device: GPUDevice,
+  root: TgpuRoot,
   canvas: HTMLCanvasElement,
   pane: Pane,
   gpuTextureForStorage: GPUTexture,
   gpuTextureForRead: GPUTexture,
 ) => {
+  const device = root.device;
   // =============================================================
   // Set up tweakpane settings.
   // =============================================================
@@ -231,24 +232,18 @@ const initializeAgents = (
   // could be to re-create bindgroups with agentsBufferGPU whenever it changes.
   // this will not incur performance hit because compute pass runs with SLIME_MOLD_UNIFORMS.numOfAgents
   // even if this gpu array is large, we won't use it for most calculations when numOfAgents is small
-  const maxAgentsArraySize = UNIFORMS_SLIME_SIM.numOfAgents.max * 4;
-  const fakeArrayCPU = new Float32Array(maxAgentsArraySize);
-  const agentsBufferGPU = device.createBuffer({
-    label: 'create agents buffer',
-    size: fakeArrayCPU.byteLength,
-    usage:
-      GPUBufferUsage.STORAGE |
-      GPUBufferUsage.COPY_SRC |
-      GPUBufferUsage.COPY_DST,
-  });
-  resetAgentsBuffer(device, canvas, agentsBufferGPU);
+  const agentsBufferGPU = root
+    .createBuffer(AgentArray(UNIFORMS_SLIME_SIM.numOfAgents.max))
+    .$name('create agents buffer')
+    .$usage('storage');
+  resetAgentsBuffer(canvas, agentsBufferGPU);
   resetGPUTextures(device, canvas, gpuTextureForStorage, gpuTextureForRead);
 
   // =============================================================
   // Add tweakpane handlers.
   // =============================================================
   simulationFolder.on('change', () => {
-    resetAgentsBuffer(device, canvas, agentsBufferGPU);
+    resetAgentsBuffer(canvas, agentsBufferGPU);
     resetGPUTextures(device, canvas, gpuTextureForStorage, gpuTextureForRead);
   });
 

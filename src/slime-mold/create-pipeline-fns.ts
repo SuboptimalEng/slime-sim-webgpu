@@ -1,9 +1,10 @@
-import tgpu, { type TgpuBuffer, type TgpuRoot, type Uniform } from 'typegpu';
+import tgpu, { type Storage, type TgpuBuffer, type TgpuRoot, type Uniform } from 'typegpu';
+import type { TgpuArray } from 'typegpu/data';
 import c1UpdateAgentsWGSL from './shaders/compute-01-update-agents.wgsl?raw';
 import c2FadeAgentsTrailWGSL from './shaders/compute-02-fade-agents-trail.wgsl?raw';
 import c3BlurAgentsTrailWGSL from './shaders/compute-03-blur-agents-trail.wgsl?raw';
 import r1DrawAgentsWGSL from './shaders/render-01-draw-agents.wgsl?raw';
-import { AgentArray, ColorizationUniformsStruct, SlimeSimUniformsStruct } from './data-types';
+import { AgentArray, AgentStruct, ColorizationUniformsStruct, SlimeSimUniformsStruct } from './data-types';
 
 // Definitions shared between the different pipelines
 const commonDependencies = {
@@ -14,11 +15,13 @@ const commonDependencies = {
 const createUpdateAgentsComputePipeline = (
   root: TgpuRoot,
   slimeSimUniformsBufferGPU: TgpuBuffer<typeof SlimeSimUniformsStruct> & Uniform,
-  agentsBufferGPU: GPUBuffer,
+  agentsBufferGPU: TgpuBuffer<TgpuArray<typeof AgentStruct>> & Storage,
   gpuTextureForReadView: GPUTextureView,
   gpuTextureForStorageView: GPUTextureView,
 ) => {
   const device = root.device;
+  // Generating definitions of common dependencies based on
+  // their TypeGPU definitions.
   const updateAgentsWGSL = tgpu.resolve({
     input: c1UpdateAgentsWGSL,
     extraDependencies: commonDependencies,
@@ -64,6 +67,8 @@ const createFadeAgentsTrailComputePipeline = (
   gpuTextureForStorageView: GPUTextureView,
 ) => {
   const device = root.device;
+  // Generating definitions of common dependencies based on
+  // their TypeGPU definitions.
   const fadeAgentsTrailWGSL = tgpu.resolve({
     input: c2FadeAgentsTrailWGSL,
     extraDependencies: commonDependencies,
@@ -106,6 +111,8 @@ const createBlurAgentsTrailComputePipeline = (
   gpuTextureForStorageView: GPUTextureView,
 ) => {
   const device = root.device;
+  // Generating definitions of common dependencies based on
+  // their TypeGPU definitions.
   const blurAgentsTrailWGSL = tgpu.resolve({
     input: c3BlurAgentsTrailWGSL,
     extraDependencies: commonDependencies,
@@ -149,6 +156,8 @@ const createDrawAgentsRenderPipeline = (
   gpuTextureForReadView: GPUTextureView,
 ) => {
   const device = root.device;
+  // Generating definitions of common dependencies based on
+  // their TypeGPU definitions.
   const drawAgentsWGSL = tgpu.resolve({
     input: r1DrawAgentsWGSL,
     extraDependencies: commonDependencies,

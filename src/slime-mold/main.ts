@@ -72,7 +72,7 @@ const main = async () => {
   // Initialize the agents buffer.
   // =============================================================
   const agentsBufferGPU = initializeAgents(
-    device,
+    root,
     canvas,
     initializedPane,
     gpuTextureForStorage,
