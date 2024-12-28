@@ -7,7 +7,7 @@ import {
   resetGPUTextures,
   resetSlimeSimUniformsBuffer,
 } from './initialize-helpers';
-import { SlimeSimUniformsStruct } from './data-types';
+import { ColorizationUniformsStruct, SlimeSimUniformsStruct } from './data-types';
 
 const initializeWebGPU = async (canvasWidth: number, canvasHeight: number) => {
   const canvas = document.querySelector('canvas');
@@ -125,7 +125,7 @@ const initializeSlimeSimUniforms = (
   return uniformsBufferGPU;
 };
 
-const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
+const initializeColorizationUniforms = (root: TgpuRoot, pane: Pane) => {
   // =============================================================
   // Set up tweakpane settings.
   // =============================================================
@@ -143,18 +143,11 @@ const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
   // =============================================================
   // Create gpu buffer(s).
   // =============================================================
-  const colorizationUniformsArrayCPU = new Float32Array(12);
-  const colorizationUniformsBufferGPU = device.createBuffer({
-    label: 'colorization uniforms buffer',
-    size: colorizationUniformsArrayCPU.byteLength,
-    usage:
-      GPUBufferUsage.COPY_DST |
-      GPUBufferUsage.COPY_SRC |
-      GPUBufferUsage.UNIFORM,
-  });
+  const colorizationUniformsBufferGPU = root
+    .createBuffer(ColorizationUniformsStruct)
+    .$name('colorization uniforms buffer')
+    .$usage('uniform');
   resetColorizationUniformsBuffer(
-    device,
-    colorizationUniformsArrayCPU,
     colorizationUniformsBufferGPU,
   );
 
@@ -163,8 +156,6 @@ const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
   // =============================================================
   colorizationFolder.on('change', () => {
     resetColorizationUniformsBuffer(
-      device,
-      colorizationUniformsArrayCPU,
       colorizationUniformsBufferGPU,
     );
   });

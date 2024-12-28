@@ -1,7 +1,7 @@
 import { TgpuBuffer } from 'typegpu';
-import { vec2f } from 'typegpu/data';
+import { vec2f, vec3f } from 'typegpu/data';
 import { UNIFORMS_COLORIZATION, UNIFORMS_SLIME_SIM } from './uniforms';
-import { SlimeSimUniformsStruct } from './data-types';
+import { ColorizationUniformsStruct, SlimeSimUniformsStruct } from './data-types';
 
 const resetAgentsBuffer = (
   device: GPUDevice,
@@ -56,27 +56,15 @@ const resetSlimeSimUniformsBuffer = (
 };
 
 const resetColorizationUniformsBuffer = (
-  device: GPUDevice,
-  colorizationUniformsCPU: Float32Array,
-  colorizationUniformsBufferGPU: GPUBuffer,
+  colorizationUniformsBufferGPU: TgpuBuffer<typeof ColorizationUniformsStruct>,
 ) => {
-  colorizationUniformsCPU[0] = UNIFORMS_COLORIZATION.blurTrail.value ? 1 : 0;
-  colorizationUniformsCPU[1] = UNIFORMS_COLORIZATION.enableLighting.value
-    ? 1
-    : 0;
-
   const slimeColor = UNIFORMS_COLORIZATION.slimeColor.value;
-  // todo: dive a little deeper into struct memory packing
-  // todo: for some reason, this needs to be 4th value, can't be the 1st one?
-  colorizationUniformsCPU[4] = slimeColor.r / 255;
-  colorizationUniformsCPU[5] = slimeColor.g / 255;
-  colorizationUniformsCPU[6] = slimeColor.b / 255;
 
-  device.queue.writeBuffer(
-    colorizationUniformsBufferGPU,
-    0,
-    colorizationUniformsCPU,
-  );
+  colorizationUniformsBufferGPU.write({
+    blurTrail: UNIFORMS_COLORIZATION.blurTrail.value ? 1 : 0,
+    enableLighting: UNIFORMS_COLORIZATION.enableLighting.value ? 1 : 0,
+    slimeColor: vec3f(slimeColor.r / 255, slimeColor.g / 255, slimeColor.b / 255),
+  });
 };
 
 const resetGPUTextures = (

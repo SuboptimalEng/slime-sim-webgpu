@@ -92,7 +92,7 @@ const main = async () => {
   // Initialize colorization uniforms and tweakpane.
   // =============================================================
   const colorizationUniformsBufferGPU = initializeColorizationUniforms(
-    device,
+    root,
     initializedPane,
   );
 

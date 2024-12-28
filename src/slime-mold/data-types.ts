@@ -15,17 +15,17 @@ export const SlimeSimUniformsStruct = struct({
 
   // other
   diffuseKernel: f32,
-});
+}).$name('SlimeSimUniformsStruct');
 
 export const ColorizationUniformsStruct = struct({
   blurTrail: f32,
   enableLighting: f32,
   slimeColor: vec3f,
-});
+}).$name('ColorizationUniformsStruct');
 
 export const AgentStruct = struct({
   position: vec2f,
   direction: vec2f,
-});
+}).$name('Agent');
 
 export const AgentArray = (count: number) => arrayOf(AgentStruct, count);

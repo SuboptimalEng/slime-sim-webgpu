@@ -1,10 +1,15 @@
 import tgpu, { type TgpuBuffer, type TgpuRoot, type Uniform } from 'typegpu';
-import commonUniformsWGSL from './shaders/common-uniforms.wgsl?raw';
 import c1UpdateAgentsWGSL from './shaders/compute-01-update-agents.wgsl?raw';
 import c2FadeAgentsTrailWGSL from './shaders/compute-02-fade-agents-trail.wgsl?raw';
 import c3BlurAgentsTrailWGSL from './shaders/compute-03-blur-agents-trail.wgsl?raw';
 import r1DrawAgentsWGSL from './shaders/render-01-draw-agents.wgsl?raw';
 import { AgentArray, ColorizationUniformsStruct, SlimeSimUniformsStruct } from './data-types';
+
+// Definitions shared between the different pipelines
+const commonDependencies = {
+  SlimeSimUniformsStruct,
+  ColorizationUniformsStruct,
+};
 
 const createUpdateAgentsComputePipeline = (
   root: TgpuRoot,
@@ -14,7 +19,10 @@ const createUpdateAgentsComputePipeline = (
   gpuTextureForStorageView: GPUTextureView,
 ) => {
   const device = root.device;
-  const updateAgentsWGSL = [commonUniformsWGSL, c1UpdateAgentsWGSL].join('');
+  const updateAgentsWGSL = tgpu.resolve({
+    input: c1UpdateAgentsWGSL,
+    extraDependencies: commonDependencies,
+  });
   const updateAgentsShaderModule = device.createShaderModule({
     label: 'update agents: create shader module',
     code: updateAgentsWGSL,
@@ -56,9 +64,10 @@ const createFadeAgentsTrailComputePipeline = (
   gpuTextureForStorageView: GPUTextureView,
 ) => {
   const device = root.device;
-  const fadeAgentsTrailWGSL = [commonUniformsWGSL, c2FadeAgentsTrailWGSL].join(
-    '',
-  );
+  const fadeAgentsTrailWGSL = tgpu.resolve({
+    input: c2FadeAgentsTrailWGSL,
+    extraDependencies: commonDependencies,
+  });
   const fadeAgentsTrailShaderModule = device.createShaderModule({
     label: 'fade agents trail: create shader module',
     code: fadeAgentsTrailWGSL,
@@ -92,13 +101,15 @@ const createFadeAgentsTrailComputePipeline = (
 const createBlurAgentsTrailComputePipeline = (
   root: TgpuRoot,
   slimeSimUniformsBufferGPU: TgpuBuffer<typeof SlimeSimUniformsStruct> & Uniform,
-  colorizationUniformsBufferGPU: GPUBuffer,
+  colorizationUniformsBufferGPU: TgpuBuffer<typeof ColorizationUniformsStruct> & Uniform,
   gpuTextureForReadView: GPUTextureView,
   gpuTextureForStorageView: GPUTextureView,
 ) => {
   const device = root.device;
-  // prettier-ignore
-  const blurAgentsTrailWGSL = [commonUniformsWGSL, c3BlurAgentsTrailWGSL].join('');
+  const blurAgentsTrailWGSL = tgpu.resolve({
+    input: c3BlurAgentsTrailWGSL,
+    extraDependencies: commonDependencies,
+  });
   const blurAgentsTrailShaderModule = device.createShaderModule({
     label: 'blur agents trail: create shader module',
     code: blurAgentsTrailWGSL,
@@ -134,11 +145,14 @@ const createDrawAgentsRenderPipeline = (
   root: TgpuRoot,
   canvasFormat: GPUTextureFormat,
   slimeSimUniformsBufferGPU: TgpuBuffer<typeof SlimeSimUniformsStruct> & Uniform,
-  colorizationUniformsBufferGPU: GPUBuffer,
+  colorizationUniformsBufferGPU: TgpuBuffer<typeof ColorizationUniformsStruct> & Uniform,
   gpuTextureForReadView: GPUTextureView,
 ) => {
   const device = root.device;
-  const drawAgentsWGSL = [commonUniformsWGSL, r1DrawAgentsWGSL].join('');
+  const drawAgentsWGSL = tgpu.resolve({
+    input: r1DrawAgentsWGSL,
+    extraDependencies: commonDependencies,
+  });
   const drawAgentsShaderModule = device.createShaderModule({
     label: 'draw agents: create shader module',
     code: drawAgentsWGSL,
