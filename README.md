@@ -8,8 +8,8 @@ Here's a 45-second demo on
 [Twitter](https://x.com/SuboptimalEng/status/1873425520106582229),
 [Threads](https://www.threads.net/@suboptimaleng/post/DEK9UtZIX5n?hl=en), and
 [r/graphicsprogramming](https://www.reddit.com/r/GraphicsProgramming/comments/1hp4kn2/webgpu_typescript_slime_mold_simulation/).
-You can also try the playable demo on my website. Just know that WebGPU doesn't
-work on all devices so you might get an error screen.
+You can also try the playable demo on my website (linked above). Just know that
+WebGPU doesn't work on all devices so you might get an error screen.
 
 If you prefer a more in-depth video, you can checkout this [5-minute dev log on
 YouTube](https://www.youtube.com/watch?v=nBqZOz7AF34) where I showcase an extended demo
