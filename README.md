@@ -4,13 +4,20 @@ This repository contains the code for my physarum slime mold simulation. I made
 it to learn more about WebGPU and compute shaders. It's essentially a recreation
 of Sebastian Lague's slime mold project (albiet with fewer features).
 
-Here's a 5-minute dev log on [YouTube](https://www.youtube.com/watch?v=nBqZOz7AF34)
-where I go over some of the of high-level techinical details and showcase an extended
-demo.
+If you prefer a more in-depth video, you can checkout this 5-minute dev log on
+[YouTube](https://www.youtube.com/watch?v=nBqZOz7AF34) where I showcase an extended demo
+and answer the following questions:
+
+- What is WebGPU?
+- What are compute shaders?
+- What is the graphics pipeline for this slime simulation?
+- What happens in each shader pass?
 
 <!--
 Remember to add this:
-Here's a 30-second demo on [Twitter](), [Threads](), and [Reddit]().
+If you want see this in action, you can checkout a 30-second demo on [Twitter](),
+[Threads](), or [r/graphicsprogramming](). You can also try the demo on my website.
+Just know that WebGPU does not work on all devices so you might get an error screen.
 -->
 
 ```
