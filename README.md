@@ -20,6 +20,8 @@ If you want see this in action, you can checkout a 30-second demo on [Twitter]()
 Just know that WebGPU does not work on all devices so you might get an error screen.
 -->
 
+## Setup Guide
+
 ```
 # Setup Guide (for everyone).
 git clone https://github.com/SuboptimalEng/slime-sim-webgpu.git
@@ -33,6 +35,8 @@ npm run build
 npm run deploy
 # Disable StrictMode before running locally and pushing to GitHub.
 ```
+
+## Screenshots
 
 <img src="/_screenshots/slime-mold-01.png">
 <img src="/_screenshots/slime-mold-02.png">
