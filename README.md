@@ -1,4 +1,4 @@
-# 🐌 Slime Sim WebGPU
+# 🦠 Slime Sim WebGPU
 
 This repository contains the code for my physarum slime mold simulation. I made
 it to learn more about WebGPU and compute shaders. It's essentially a recreation
