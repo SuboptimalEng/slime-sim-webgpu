@@ -1,8 +1,8 @@
 # 🦠 Slime Sim WebGPU
 
-This repository contains the code for my slime mold simulation. I made
-it to learn more about WebGPU and compute shaders. It's essentially a recreation
-of Sebastian Lague's coding adventure (albiet with fewer features).
+I made this slime mold simulation to learn more about WebGPU and compute shaders. 
+It's essentially a recreation of Sebastian Lague's coding adventure (albiet with
+fewer features).
 
 Here's a 45-second demo on
 [Twitter](https://x.com/SuboptimalEng/status/1873425520106582229),
