@@ -1,3 +1,4 @@
+import tgpu, { type TgpuBuffer, type TgpuRoot, type Uniform } from 'typegpu';
 import { Pane } from 'tweakpane';
 import { UNIFORMS_COLORIZATION, UNIFORMS_SLIME_SIM } from './uniforms';
 import {
@@ -6,6 +7,7 @@ import {
   resetGPUTextures,
   resetSlimeSimUniformsBuffer,
 } from './initialize-helpers';
+import { AgentArray, ColorizationUniformsStruct, SlimeSimUniformsStruct } from './data-types';
 
 const initializeWebGPU = async (canvasWidth: number, canvasHeight: number) => {
   const canvas = document.querySelector('canvas');
@@ -13,19 +15,8 @@ const initializeWebGPU = async (canvasWidth: number, canvasHeight: number) => {
     throw new Error('No canvas detected in the browser.');
   }
 
-  if (!navigator.gpu) {
-    throw new Error('WebGPU is not supported in this browser.');
-  }
-
-  const adapter = await navigator.gpu.requestAdapter();
-  if (!adapter) {
-    throw new Error('No appropriate GPUAdapter found.');
-  }
-
-  // https://eliemichel.github.io/LearnWebGPU/getting-started/adapter-and-device/the-device.html
-  // device is used to create all other gpu objects
-  // once device is created, the adapter should in general no longer be used
-  const device = await adapter.requestDevice();
+  const root = await tgpu.init();
+  const device = root.device;
 
   device.addEventListener('uncapturederror', (event) => {
     console.log(
@@ -47,14 +38,14 @@ const initializeWebGPU = async (canvasWidth: number, canvasHeight: number) => {
     format: canvasFormat,
   });
 
-  return { device, canvas, canvasFormat, context };
+  return { root, canvas, canvasFormat, context };
 };
 
 const initializeSlimeSimUniforms = (
-  device: GPUDevice,
+  root: TgpuRoot,
   canvas: HTMLCanvasElement,
   pane: Pane,
-): GPUBuffer => {
+): TgpuBuffer<typeof SlimeSimUniformsStruct> & Uniform => {
   // =============================================================
   // Set up tweakpane settings.
   // =============================================================
@@ -86,25 +77,18 @@ const initializeSlimeSimUniforms = (
 
   // =============================================================
   // Create gpu buffer(s).
-  //
-  // Array of size 8 is too small.
   // =============================================================
-  const uniformsCPU = new Float32Array(10);
-  const uniformsBufferGPU = device.createBuffer({
-    label: 'create uniforms buffer for gpu',
-    size: uniformsCPU.byteLength,
-    usage:
-      GPUBufferUsage.COPY_DST |
-      GPUBufferUsage.COPY_SRC |
-      GPUBufferUsage.UNIFORM,
-  });
-  resetSlimeSimUniformsBuffer(device, canvas, uniformsCPU, uniformsBufferGPU);
+  const uniformsBufferGPU = root
+    .createBuffer(SlimeSimUniformsStruct)
+    .$name('create uniforms buffer for gpu')
+    .$usage('uniform');
+  resetSlimeSimUniformsBuffer(canvas, uniformsBufferGPU);
 
   // =============================================================
   // Add tweakpane handlers.
   // =============================================================
   pane.on('change', () => {
-    resetSlimeSimUniformsBuffer(device, canvas, uniformsCPU, uniformsBufferGPU);
+    resetSlimeSimUniformsBuffer(canvas, uniformsBufferGPU);
     console.log('pane changed!');
   });
   randomizeAgentSettingsButton.on('click', () => {
@@ -141,7 +125,7 @@ const initializeSlimeSimUniforms = (
   return uniformsBufferGPU;
 };
 
-const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
+const initializeColorizationUniforms = (root: TgpuRoot, pane: Pane) => {
   // =============================================================
   // Set up tweakpane settings.
   // =============================================================
@@ -159,18 +143,11 @@ const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
   // =============================================================
   // Create gpu buffer(s).
   // =============================================================
-  const colorizationUniformsArrayCPU = new Float32Array(12);
-  const colorizationUniformsBufferGPU = device.createBuffer({
-    label: 'colorization uniforms buffer',
-    size: colorizationUniformsArrayCPU.byteLength,
-    usage:
-      GPUBufferUsage.COPY_DST |
-      GPUBufferUsage.COPY_SRC |
-      GPUBufferUsage.UNIFORM,
-  });
+  const colorizationUniformsBufferGPU = root
+    .createBuffer(ColorizationUniformsStruct)
+    .$name('colorization uniforms buffer')
+    .$usage('uniform');
   resetColorizationUniformsBuffer(
-    device,
-    colorizationUniformsArrayCPU,
     colorizationUniformsBufferGPU,
   );
 
@@ -179,8 +156,6 @@ const initializeColorizationUniforms = (device: GPUDevice, pane: Pane) => {
   // =============================================================
   colorizationFolder.on('change', () => {
     resetColorizationUniformsBuffer(
-      device,
-      colorizationUniformsArrayCPU,
       colorizationUniformsBufferGPU,
     );
   });
@@ -228,12 +203,13 @@ const initializeGPUTextures = (
 };
 
 const initializeAgents = (
-  device: GPUDevice,
+  root: TgpuRoot,
   canvas: HTMLCanvasElement,
   pane: Pane,
   gpuTextureForStorage: GPUTexture,
   gpuTextureForRead: GPUTexture,
 ) => {
+  const device = root.device;
   // =============================================================
   // Set up tweakpane settings.
   // =============================================================
@@ -256,24 +232,18 @@ const initializeAgents = (
   // could be to re-create bindgroups with agentsBufferGPU whenever it changes.
   // this will not incur performance hit because compute pass runs with SLIME_MOLD_UNIFORMS.numOfAgents
   // even if this gpu array is large, we won't use it for most calculations when numOfAgents is small
-  const maxAgentsArraySize = UNIFORMS_SLIME_SIM.numOfAgents.max * 4;
-  const fakeArrayCPU = new Float32Array(maxAgentsArraySize);
-  const agentsBufferGPU = device.createBuffer({
-    label: 'create agents buffer',
-    size: fakeArrayCPU.byteLength,
-    usage:
-      GPUBufferUsage.STORAGE |
-      GPUBufferUsage.COPY_SRC |
-      GPUBufferUsage.COPY_DST,
-  });
-  resetAgentsBuffer(device, canvas, agentsBufferGPU);
+  const agentsBufferGPU = root
+    .createBuffer(AgentArray(UNIFORMS_SLIME_SIM.numOfAgents.max))
+    .$name('create agents buffer')
+    .$usage('storage');
+  resetAgentsBuffer(canvas, agentsBufferGPU);
   resetGPUTextures(device, canvas, gpuTextureForStorage, gpuTextureForRead);
 
   // =============================================================
   // Add tweakpane handlers.
   // =============================================================
   simulationFolder.on('change', () => {
-    resetAgentsBuffer(device, canvas, agentsBufferGPU);
+    resetAgentsBuffer(canvas, agentsBufferGPU);
     resetGPUTextures(device, canvas, gpuTextureForStorage, gpuTextureForRead);
   });
 
