@@ -25,8 +25,8 @@ const main = async () => {
   let canvasHeight = 600;
   // canvasWidth = 800;
   // canvasHeight = 800;
-  canvasWidth = 1600;
-  canvasHeight = 900;
+  // canvasWidth = 1600;
+  // canvasHeight = 900;
   // canvasWidth *= 0.75;
   // canvasHeight *= 0.75;
 
