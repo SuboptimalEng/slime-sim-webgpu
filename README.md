@@ -7,7 +7,7 @@ fewer features).
 Here's a 45-second demo on
 [Twitter](https://x.com/SuboptimalEng/status/1873425520106582229),
 [Threads](https://www.threads.net/@suboptimaleng/post/DEK9UtZIX5n?hl=en), and
-[r/graphicsprogramming](https://www.reddit.com/r/GraphicsProgramming/comments/1hp4kn2/webgpu_typescript_slime_mold_simulation/).
+[r/GraphicsProgramming](https://www.reddit.com/r/GraphicsProgramming/comments/1hp4kn2/webgpu_typescript_slime_mold_simulation/).
 You can also try the playable demo on my website (linked in the about section of
 this repo). Just know that WebGPU doesn't work on all devices so you might get an
 error screen.
