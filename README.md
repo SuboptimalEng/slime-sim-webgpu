@@ -12,7 +12,7 @@ You can also try the playable demo on my website (linked in the about section of
 this repo). Just know that WebGPU doesn't work on all devices so you might get an
 error screen.
 
-If you prefer a more in-depth video, you can checkout this [5-minute dev log on
+If you prefer a more in-depth video, you can checkout this [5-minute devlog on
 YouTube](https://www.youtube.com/watch?v=nBqZOz7AF34) where I showcase an extended demo
 and answer the following questions:
 
