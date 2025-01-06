@@ -13,7 +13,8 @@
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tweakpane": "^4.0.5"
+    "tweakpane": "^4.0.5",
+    "typegpu": "^0.3.0-alpha.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",

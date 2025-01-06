@@ -1,82 +1,61 @@
+import type { TgpuBuffer } from 'typegpu';
+import { type TgpuArray, vec2f, vec3f } from 'typegpu/data';
 import { UNIFORMS_COLORIZATION, UNIFORMS_SLIME_SIM } from './uniforms';
+import { AgentStruct, ColorizationUniformsStruct, SlimeSimUniformsStruct } from './data-types';
 
 const resetAgentsBuffer = (
-  device: GPUDevice,
   canvas: HTMLCanvasElement,
-  agentsBufferGPU: GPUBuffer,
+  agentsBufferGPU: TgpuBuffer<TgpuArray<typeof AgentStruct>>,
 ) => {
+  const startRadius = UNIFORMS_SLIME_SIM.startRadius.value;
   const numOfAgents = UNIFORMS_SLIME_SIM.numOfAgents.value;
-  const agentsArraySize = numOfAgents * 4;
-  const agentsArrayCPU = new Float32Array(agentsArraySize);
 
-  // initialize agents data
-  for (let i = 0; i < numOfAgents; i++) {
-    // agent position
+  // write to gpu buffer
+  agentsBufferGPU.write(Array.from({ length: numOfAgents }).map(() => {
     let x = canvas.width / 2;
     let y = canvas.height / 2;
     let r = Math.random() * 10;
-    agentsArrayCPU[i * 4 + 0] =
-      x + Math.cos(r) * UNIFORMS_SLIME_SIM.startRadius.value;
-    agentsArrayCPU[i * 4 + 1] =
-      y + Math.sin(r) * UNIFORMS_SLIME_SIM.startRadius.value;
 
-    // agent direction
-    agentsArrayCPU[i * 4 + 2] = Math.random() * 2 - 1;
-    agentsArrayCPU[i * 4 + 3] = Math.random() * 2 - 1;
-  }
-
-  // write to gpu buffer
-  device.queue.writeBuffer(agentsBufferGPU, 0, agentsArrayCPU);
+    return {
+      position: vec2f(x + Math.cos(r) * startRadius, y + Math.sin(r) * startRadius),
+      direction: vec2f(Math.random() * 2 - 1, Math.random() * 2 - 1),
+    };
+  }));
 
   return agentsBufferGPU;
 };
 
 const resetSlimeSimUniformsBuffer = (
-  device: GPUDevice,
   canvas: HTMLCanvasElement,
-  uniformsCPU: Float32Array,
-  uniformsBufferGPU: GPUBuffer,
+  uniformsBufferGPU: TgpuBuffer<typeof SlimeSimUniformsStruct>,
 ) => {
-  // canvas
-  uniformsCPU[0] = canvas.width;
-  uniformsCPU[1] = canvas.height;
+  uniformsBufferGPU.write({
+    // canvas
+    resolution: vec2f(canvas.width, canvas.height),
+    // general
+    radius: UNIFORMS_SLIME_SIM.radius.value,
+    stepSize: UNIFORMS_SLIME_SIM.stepSize.value,
+    decayT: UNIFORMS_SLIME_SIM.decayT.value,
+    // sensor
+    sensorOffset: UNIFORMS_SLIME_SIM.sensorOffset.value,
+    sensorAngle: UNIFORMS_SLIME_SIM.sensorAngle.value,
+    rotationAngle: UNIFORMS_SLIME_SIM.rotationAngle.value,
+    diffuseKernel: 0,
+  });
 
-  // general
-  uniformsCPU[2] = UNIFORMS_SLIME_SIM.radius.value;
-  uniformsCPU[3] = UNIFORMS_SLIME_SIM.stepSize.value;
-  uniformsCPU[4] = UNIFORMS_SLIME_SIM.decayT.value;
-
-  // sensor
-  uniformsCPU[5] = UNIFORMS_SLIME_SIM.sensorOffset.value;
-  uniformsCPU[6] = UNIFORMS_SLIME_SIM.sensorAngle.value;
-  uniformsCPU[7] = UNIFORMS_SLIME_SIM.rotationAngle.value;
-
-  device.queue.writeBuffer(uniformsBufferGPU, 0, uniformsCPU);
   return uniformsBufferGPU;
 };
 
 const resetColorizationUniformsBuffer = (
-  device: GPUDevice,
-  colorizationUniformsCPU: Float32Array,
-  colorizationUniformsBufferGPU: GPUBuffer,
+  colorizationUniformsBufferGPU: TgpuBuffer<typeof ColorizationUniformsStruct>,
 ) => {
-  colorizationUniformsCPU[0] = UNIFORMS_COLORIZATION.blurTrail.value ? 1 : 0;
-  colorizationUniformsCPU[1] = UNIFORMS_COLORIZATION.enableLighting.value
-    ? 1
-    : 0;
-
   const slimeColor = UNIFORMS_COLORIZATION.slimeColor.value;
-  // todo: dive a little deeper into struct memory packing
-  // todo: for some reason, this needs to be 4th value, can't be the 1st one?
-  colorizationUniformsCPU[4] = slimeColor.r / 255;
-  colorizationUniformsCPU[5] = slimeColor.g / 255;
-  colorizationUniformsCPU[6] = slimeColor.b / 255;
 
-  device.queue.writeBuffer(
-    colorizationUniformsBufferGPU,
-    0,
-    colorizationUniformsCPU,
-  );
+  colorizationUniformsBufferGPU.write({
+    blurTrail: UNIFORMS_COLORIZATION.blurTrail.value ? 1 : 0,
+    enableLighting: UNIFORMS_COLORIZATION.enableLighting.value ? 1 : 0,
+    slimeColor: vec3f(slimeColor.r / 255, slimeColor.g / 255, slimeColor.b / 255),
+  });
 };
 
 const resetGPUTextures = (
